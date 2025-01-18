@@ -1,20 +1,21 @@
 import os
+import platform
 import subprocess
 import threading
 import time
 
 from loguru import logger
 
-import platform
 
 class WechatAPIServer:
     def __init__(self):
+        self.log_process = None
         self.process = None
         self.server_process = None
         self.macos_arm_executable_path = "../core/XYWechatPad-macos-arm"
         self.macos_x86_executable_path = "../core/XYWechatPad-macos-x86"
         self.linux_x86_executable_path = "../core/XYWechatPad-linux-x86"
-        self.windoes_executable_path = "../core/XYWechatPad-windows.exe"
+        self.windows_executable_path = "./WechatAPI/core/XYWechatPad-windows.exe"
 
         self.arguments = ["--port", "9000", "--mode", "release", "--redis-host", "127.0.0.1", "--redis-port", "6379",
                           "--redis-password", "", "--redis-db", "0"]
@@ -32,9 +33,10 @@ class WechatAPIServer:
         elif platform.system() == "Linux":
             command = [self.linux_x86_executable_path] + self.arguments
         else:
-            command = [self.windoes_executable_path] + self.arguments
+            command = [self.windows_executable_path] + self.arguments
 
-        self.process = subprocess.Popen(command, cwd = os.path.dirname(os.path.abspath(__file__)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(command, cwd=os.path.dirname(os.path.abspath(__file__)), stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
         time.sleep(3)
         self.log_process = threading.Thread(target=self.process_stdout_to_log, daemon=True)
         self.log_process.start()
@@ -45,10 +47,8 @@ class WechatAPIServer:
 
     def process_stdout_to_log(self):
         while True:
-            if self.process.poll() is not None:
+            if self.process.poll() is None:
                 logger.error("WechatAPI服务已停止")
-                self.log_process.join() # 逆天
-                self.process.terminate()
                 return
 
             line = self.process.stdout.readline()
@@ -63,8 +63,8 @@ class WechatAPIServer:
         if mode not in ["debug", "release"]:
             raise ValueError("mode must be 'debug' or 'release'")
 
-
-        self.arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port",str(redis_port), "--redis-db", str(redis_db)]
+        self.arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port",
+                          str(redis_port), "--redis-db", str(redis_db)]
 
         if redis_password:
             self.arguments.extend(["--redis-password", redis_password])
