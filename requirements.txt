@@ -1,0 +1,7 @@
+loguru~=0.7.3
+aiohttp~=3.11.11
+pydub~=0.25.1
+qrcode~=8.0
+moviepy~=2.1.2
+websockets~=14.1
+pysilk-mod~=1.6.4
