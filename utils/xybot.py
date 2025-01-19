@@ -73,6 +73,21 @@ class XYBot:
             message["SenderWxid"] = message["FromWxid"]
             message["IsGroup"] = False
 
+        try:
+            root = ET.fromstring(message["MsgSource"])
+            ats = root.find("atuserlist").text if root.find("atuserlist") is not None else ""
+        except Exception as e:
+            logger.error("解析文本消息失败: {}", e)
+            return
+
+        ats = ats.strip(",").split(",")
+        message["Ats"] = ats if ats[0] != "" else []
+
+        if self.wxid in ats:
+            logger.info("收到被@消息: {}", message)
+            await EventManager.emit("at_message", self.bot, message)
+            return
+
         logger.info("收到文本消息: {}", message)
         await EventManager.emit("text_message", self.bot, message)
 
