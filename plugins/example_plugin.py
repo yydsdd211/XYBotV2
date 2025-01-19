@@ -16,12 +16,12 @@ class ExamplePlugin(PluginBase):
 
         logger.info("收到了文本消息")
 
-    @on_image_message
-    async def handle_image(self, bot: WechatAPIClient, message: dict):
+    @on_at_message
+    async def handle_at(self, bot: WechatAPIClient, message: dict):
         if not self.enabled:
             return
 
-        logger.info("收到了图片消息")
+        logger.info("收到了被@消息")
 
     @on_voice_message
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
@@ -30,6 +30,20 @@ class ExamplePlugin(PluginBase):
 
         logger.info("收到了语音消息")
 
+    @on_image_message
+    async def handle_image(self, bot: WechatAPIClient, message: dict):
+        if not self.enabled:
+            return
+
+        logger.info("收到了图片消息")
+
+    @on_video_message
+    async def handle_video(self, bot: WechatAPIClient, message: dict):
+        if not self.enabled:
+            return
+
+        logger.info("收到了视频消息")
+
     @on_file_message
     async def handle_file(self, bot: WechatAPIClient, message: dict):
         if not self.enabled:
@@ -37,12 +51,26 @@ class ExamplePlugin(PluginBase):
 
         logger.info("收到了文件消息")
 
+    @on_quote_message
+    async def handle_quote(self, bot: WechatAPIClient, message: dict):
+        if not self.enabled:
+            return
+
+        logger.info("收到了引用消息")
+
     @on_pat_message
     async def handle_pat(self, bot: WechatAPIClient, message: dict):
         if not self.enabled:
             return
 
         logger.info("收到了拍一拍消息")
+
+    @on_emoji_message
+    async def handle_emoji(self, bot: WechatAPIClient, message: dict):
+        if not self.enabled:
+            return
+
+        logger.info("收到了表情消息")
 
     @schedule('interval', seconds=5)
     async def periodic_task(self, bot: WechatAPIClient):
