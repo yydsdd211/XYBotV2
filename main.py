@@ -10,6 +10,7 @@ from loguru import logger
 import WechatAPI
 from utils.plugin_manager import PluginManager
 from utils.xybot import XYBot
+from database.database import BotDatabase
 
 
 def is_api_message(record):
@@ -90,6 +91,9 @@ async def main():
         return
 
     logger.success("WechatAPI服务已启动")
+
+    # 初始化数据库
+    db = BotDatabase()
 
     # ==========登陆==========
 
