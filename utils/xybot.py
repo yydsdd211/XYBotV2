@@ -352,6 +352,8 @@ class XYBot:
 
         if msg_type == "pat":
             await self.process_pat_message(message)
+        elif msg_type == "ClientCheckGetExtInfo":
+            pass
         else:
             logger.info("未知的系统消息类型: {}", message)
 
