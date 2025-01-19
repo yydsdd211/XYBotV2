@@ -47,10 +47,6 @@ class WechatAPIServer:
 
     def process_stdout_to_log(self):
         while True:
-            if self.process.poll() is None:
-                logger.error("WechatAPI服务已停止")
-                return
-
             line = self.process.stdout.readline()
             if not line:
                 break
