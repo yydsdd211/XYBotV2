@@ -8,9 +8,10 @@ import traceback
 from loguru import logger
 
 import WechatAPI
+from database.database import BotDatabase
+from utils.decorators import scheduler
 from utils.plugin_manager import PluginManager
 from utils.xybot import XYBot
-from database.database import BotDatabase
 
 
 def is_api_message(record):
@@ -91,9 +92,6 @@ async def main():
         return
 
     logger.success("WechatAPI服务已启动")
-
-    # 初始化数据库
-    db = BotDatabase()
 
     # ==========登陆==========
 
@@ -176,11 +174,18 @@ async def main():
     xybot = XYBot(bot)
     xybot.update_profile(bot.wxid, bot.nickname, bot.alias, bot.phone)
 
+    # 初始化数据库
+    BotDatabase()
+
+    # 启动调度器
+    scheduler.start()
+    logger.success("定时任务已启动")
+
     # 初始化插件管理器
     plugin_manager = PluginManager()
 
     # 加载插件目录下的所有插件
-    loaded_plugins = await plugin_manager.load_plugins_from_directory("plugins")
+    loaded_plugins = await plugin_manager.load_plugins_from_directory(bot, "plugins")
     logger.success(f"已加载插件: {loaded_plugins}")
 
     # ========== 开始接受消息 ========== #

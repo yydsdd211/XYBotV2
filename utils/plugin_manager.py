@@ -3,6 +3,7 @@ import inspect
 import os
 import sys
 from typing import Dict, Type, List
+
 from loguru import logger
 
 from .event_manager import EventManager
@@ -14,7 +15,7 @@ class PluginManager:
         self.plugins: Dict[str, PluginBase] = {}
         self.plugin_classes: Dict[str, Type[PluginBase]] = {}
 
-    async def load_plugin(self, plugin_class: Type[PluginBase]) -> bool:
+    async def load_plugin(self, bot, plugin_class: Type[PluginBase]) -> bool:
         """加载单个插件"""
         try:
             plugin_name = plugin_class.__name__
@@ -23,7 +24,7 @@ class PluginManager:
 
             plugin = plugin_class()
             EventManager.bind_instance(plugin)
-            await plugin.on_enable()
+            await plugin.on_enable(bot)
             self.plugins[plugin_name] = plugin
             self.plugin_classes[plugin_name] = plugin_class
             return True
@@ -46,7 +47,7 @@ class PluginManager:
             logger.error(f"卸载插件 {plugin_name} 时发生错误: {e}")
             return False
 
-    async def load_plugins_from_directory(self, directory: str) -> List[str]:
+    async def load_plugins_from_directory(self, bot, directory: str) -> List[str]:
         """从目录批量加载插件"""
         loaded_plugins = []
 
@@ -57,7 +58,7 @@ class PluginManager:
                     module = importlib.import_module(f"plugins.{module_name}")
                     for name, obj in inspect.getmembers(module):
                         if inspect.isclass(obj) and issubclass(obj, PluginBase) and obj != PluginBase:
-                            if await self.load_plugin(obj):
+                            if await self.load_plugin(bot, obj):
                                 loaded_plugins.append(obj.__name__)
                 except Exception as e:
                     logger.error(f"加载插件模块 {module_name} 时发生错误: {e}")

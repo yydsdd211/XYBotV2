@@ -1,5 +1,61 @@
 from functools import wraps
-from typing import Callable
+from typing import Callable, Union
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+
+scheduler = AsyncIOScheduler()
+
+
+def schedule(
+        trigger: Union[str, CronTrigger, IntervalTrigger],
+        **trigger_args
+) -> Callable:
+    """
+    定时任务装饰器
+    
+    例子:
+
+    - @schedule('interval', seconds=30)
+    - @schedule('cron', hour=8, minute=30, second=30)
+    - @schedule('date', run_date='2024-01-01 00:00:00')
+    """
+
+    def decorator(func: Callable):
+        job_id = f"{func.__module__}.{func.__qualname__}"
+
+        @wraps(func)
+        async def wrapper(self, *args, **kwargs):
+            return await func(self, *args, **kwargs)
+
+        setattr(wrapper, '_is_scheduled', True)
+        setattr(wrapper, '_schedule_trigger', trigger)
+        setattr(wrapper, '_schedule_args', trigger_args)
+        setattr(wrapper, '_job_id', job_id)
+
+        return wrapper
+
+    return decorator
+
+
+def add_job_safe(scheduler: AsyncIOScheduler, job_id: str, func: Callable, bot,
+                 trigger: Union[str, CronTrigger, IntervalTrigger], **trigger_args):
+    """添加函数到定时任务中，如果存在则先删除现有的任务"""
+    try:
+        scheduler.remove_job(job_id)
+    except:
+        pass
+    # Pass bot as first argument to the scheduled function
+    scheduler.add_job(func, trigger, args=[bot], id=job_id, **trigger_args)
+
+
+def remove_job_safe(scheduler: AsyncIOScheduler, job_id: str):
+    """从定时任务中移除任务"""
+    try:
+        scheduler.remove_job(job_id)
+    except:
+        pass
 
 
 def on_text_message(func: Callable):
