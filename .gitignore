@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# XYBot
+resource/robot_stat.json
+WechatAPI/Client/login_stat.json
