@@ -8,6 +8,11 @@ from .decorators import scheduler, add_job_safe, remove_job_safe
 class PluginBase(ABC):
     """插件基类"""
 
+    # 插件元数据
+    description: str = "暂无描述"
+    author: str = "未知"
+    version: str = "1.0.0"
+
     def __init__(self):
         self.enabled = False
         self._scheduled_jobs = set()

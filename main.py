@@ -10,7 +10,7 @@ from loguru import logger
 import WechatAPI
 from database.database import BotDatabase
 from utils.decorators import scheduler
-from utils.plugin_manager import PluginManager
+from utils.plugin_manager import plugin_manager
 from utils.xybot import XYBot
 
 
@@ -194,9 +194,6 @@ async def main():
     # 启动调度器
     scheduler.start()
     logger.success("定时任务已启动")
-
-    # 初始化插件管理器
-    plugin_manager = PluginManager()
 
     # 加载插件目录下的所有插件
     loaded_plugins = await plugin_manager.load_plugins_from_directory(bot, "plugins")

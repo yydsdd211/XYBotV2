@@ -4,7 +4,7 @@ import os
 import sys
 import tomllib
 import traceback
-from typing import Dict, Type, List
+from typing import Dict, Type, List, Union
 
 from loguru import logger
 
@@ -17,6 +17,7 @@ class PluginManager:
     def __init__(self):
         self.plugins: Dict[str, PluginBase] = {}
         self.plugin_classes: Dict[str, Type[PluginBase]] = {}
+        self.plugin_info: Dict[str, dict] = {}  # 新增：存储所有插件信息
 
         with open("main_config.toml", "rb") as f:
             main_config = tomllib.load(f)
@@ -27,6 +28,16 @@ class PluginManager:
         """加载单个插件"""
         try:
             plugin_name = plugin_class.__name__
+            # 记录插件信息，即使插件被禁用也会记录
+            self.plugin_info[plugin_name] = {
+                "name": plugin_name,
+                "description": plugin_class.description,
+                "author": plugin_class.author,
+                "version": plugin_class.version,
+                "enabled": False,
+                "class": plugin_class
+            }
+            
             if plugin_name in self.plugins or plugin_name in self.excluded_plugins:
                 return False
 
@@ -35,6 +46,7 @@ class PluginManager:
             await plugin.on_enable(bot)
             self.plugins[plugin_name] = plugin
             self.plugin_classes[plugin_name] = plugin_class
+            self.plugin_info[plugin_name]["enabled"] = True
             return True
         except Exception as e:
             logger.error(f"加载插件 {plugin_class.__name__} 时发生错误: {traceback.format_exc()}")
@@ -50,6 +62,8 @@ class PluginManager:
             await plugin.on_disable()
             del self.plugins[plugin_name]
             del self.plugin_classes[plugin_name]
+            if plugin_name in self.plugin_info:
+                self.plugin_info[plugin_name]["enabled"] = False
             return True
         except Exception as e:
             logger.error(f"卸载插件 {plugin_name} 时发生错误: {traceback.format_exc()}")
@@ -148,3 +162,23 @@ class PluginManager:
         except Exception as e:
             logger.error(f"重载所有插件时发生错误: {traceback.format_exc()}")
             return []
+
+    def get_plugin_info(self, plugin_name: str = None) -> Union[dict, List[dict]]:
+        """获取插件信息
+        
+        Args:
+            plugin_name: 插件名称，如果为None则返回所有插件信息
+            
+        Returns:
+            如果指定插件名，返回单个插件信息字典；否则返回所有插件信息列表
+        """
+        if plugin_name:
+            return self.plugin_info.get(plugin_name)
+        return list(self.plugin_info.values())
+
+    def get_plugin_info_by_name(self, plugin_name: str) -> dict:
+        """获取指定插件的信息"""
+        return self.plugin_info.get(plugin_name)
+
+
+plugin_manager = PluginManager()

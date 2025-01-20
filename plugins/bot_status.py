@@ -7,6 +7,10 @@ from utils.plugin_base import PluginBase
 
 
 class BotStatus(PluginBase):
+    description = "微信机器人状态插件"
+    author = "HenryXiaoYang"
+    version = "1.0.0"
+
     def __init__(self):
         super().__init__()
 
