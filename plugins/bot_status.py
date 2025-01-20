@@ -36,7 +36,7 @@ class BotStatus(PluginBase):
         content = str(message["Content"]).strip()
         command = content.split(" ")
 
-        if not len(command) and command[0] not in self.command:
+        if not len(command) or command[0] not in self.command:
             return
 
         out_message = (f"{self.status_message}\n"
