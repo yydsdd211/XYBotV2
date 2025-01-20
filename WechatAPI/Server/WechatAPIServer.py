@@ -23,17 +23,31 @@ class WechatAPIServer:
     def __del__(self):
         self.stop()
 
-    def start(self):
+    def start(self, port: int = 9000, mode: str = "release", redis_host: str = "127.0.0.1", redis_port: int = 6379,
+              redis_password: str = "", redis_db: int = 0):
+        """
+        Start WechatAPI server
+        :param port:
+        :param mode:
+        :param redis_host:
+        :param redis_port:
+        :param redis_password:
+        :param redis_db:
+        :return:
+        """
+        arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port", str(redis_port),
+                     "--redis-password", redis_password, "--redis-db", str(redis_db)]
+
         # check platform
         if platform.system() == "Darwin":
             if platform.processor() == "arm":
-                command = [self.macos_arm_executable_path] + self.arguments
+                command = [self.macos_arm_executable_path] + arguments
             else:
-                command = [self.macos_x86_executable_path] + self.arguments
+                command = [self.macos_x86_executable_path] + arguments
         elif platform.system() == "Linux":
-            command = [self.linux_x86_executable_path] + self.arguments
+            command = [self.linux_x86_executable_path] + arguments
         else:
-            command = [self.windows_executable_path] + self.arguments
+            command = [self.windows_executable_path] + arguments
 
         self.process = subprocess.Popen(command, cwd=os.path.dirname(os.path.abspath(__file__)), stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
@@ -52,15 +66,3 @@ class WechatAPIServer:
                 break
 
             logger.log("API", line.decode("utf-8").strip())
-
-    def set_arguments(self, port: int = 9000, mode: str = "release", redis_host: str = "127.0.0.1",
-                      redis_port: int = 6379, redis_password: str = "", redis_db: int = 0):
-
-        if mode not in ["debug", "release"]:
-            raise ValueError("mode must be 'debug' or 'release'")
-
-        self.arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port",
-                          str(redis_port), "--redis-db", str(redis_db)]
-
-        if redis_password:
-            self.arguments.extend(["--redis-password", redis_password])

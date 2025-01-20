@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import sys
+import time
 import tomllib
 import traceback
 
@@ -68,15 +69,13 @@ async def main():
     server = WechatAPI.WechatAPIServer()
 
     api_config = main_config.get("WechatAPIServer", {})
-    server.set_arguments(
-        port=api_config.get("port", 9000),
-        mode=api_config.get("mode", "release"),
-        redis_host=api_config.get("redis_host", "127.0.0.1"),
-        redis_port=api_config.get("redis_port", 6379),
-        redis_password=api_config.get("redis_password", ""),
-        redis_db=api_config.get("redis_db", 0),
-    )
-    server.start()
+
+    server.start(port=api_config.get("port", 9000),
+                 mode=api_config.get("mode", "release"),
+                 redis_host=api_config.get("redis-host", "127.0.0.1"),
+                 redis_port=api_config.get("redis-port", 6379),
+                 redis_password=api_config.get("redis-password", ""),
+                 redis_db=api_config.get("redis-db", 0))
 
     # 实例化WechatAPI客户端
     bot = WechatAPI.WechatAPIClient("127.0.0.1", api_config.get("port", 9000))
@@ -123,11 +122,21 @@ async def main():
 
     if not await bot.is_logged_in(wxid):
         # 需要登录
-        if await bot.get_cached_info(wxid):
-            # 尝试唤醒登录
-            uuid = await bot.awaken_login(wxid)
-            logger.success("获取到登录uuid: {}", uuid)
-        else:
+        try:
+            if await bot.get_cached_info(wxid):
+                # 尝试唤醒登录
+                uuid = await bot.awaken_login(wxid)
+                logger.success("获取到登录uuid: {}", uuid)
+            else:
+                # 二维码登录
+                if not device_name:
+                    device_name = bot.create_device_name()
+                if not device_id:
+                    device_id = bot.create_device_id()
+                uuid, url = await bot.get_qr_code(device_id=device_id, device_name=device_name, print_qr=True)
+                logger.success("获取到登录uuid: {}", uuid)
+                logger.success("获取到登录二维码: {}", url)
+        except:
             # 二维码登录
             if not device_name:
                 device_name = bot.create_device_name()
@@ -201,12 +210,19 @@ async def main():
 
     # ========== 开始接受消息 ========== #
 
-    await bot.sync_message()
-
     # 开启自动消息接收
     ws_port = await bot.start_websocket()
     ws = await bot.connect_websocket(ws_port)
     logger.success("已连接到WechatAPI WebSocket，开始接受消息")
+
+    # 先接受10秒的消息，之前的消息有堆积
+    logger.info("之前的消息会堆积，10秒后开始处理消息")
+    now = time.time()
+    while time.time() - now < 10:
+        await ws.recv()
+
+    # 开始接受消息
+    logger.success("开始处理消息")
     while True:
         recv = await ws.recv()
         msg_list = json.loads(recv).get("Data")
@@ -231,4 +247,5 @@ if __name__ == "__main__":
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░             ░▒▓██▓▒░  ░▒▓████████▓▒░\n")
+
     asyncio.run(main())
