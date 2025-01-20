@@ -14,7 +14,6 @@ class PluginBase(ABC):
 
     async def on_enable(self, bot=None):
         """插件启用时调用"""
-        self.enabled = True
 
         # 定时任务
         for method_name in dir(self):
@@ -30,9 +29,9 @@ class PluginBase(ABC):
 
     async def on_disable(self):
         """插件禁用时调用"""
-        self.enabled = False
-        # Remove all scheduled jobs
+        
+        # 移除定时任务
         for job_id in self._scheduled_jobs:
             remove_job_safe(scheduler, job_id)
-            logger.info(f"Scheduled job removed: {job_id}")
+        logger.info("已卸载定时任务: {}", self._scheduled_jobs)
         self._scheduled_jobs.clear()

@@ -7,4 +7,7 @@ redis-password = ""
 redis-db = 0
 
 [XYBot]
-ignore-protection = false
+version = "v1.0.0"
+ignore-protection = true
+
+disabled-plugins = ["ExamplePlugin"]

@@ -2,10 +2,13 @@ import importlib
 import inspect
 import os
 import sys
+import tomllib
+import traceback
 from typing import Dict, Type, List
 
 from loguru import logger
 
+from WechatAPI import WechatAPIClient
 from .event_manager import EventManager
 from .plugin_base import PluginBase
 
@@ -15,11 +18,16 @@ class PluginManager:
         self.plugins: Dict[str, PluginBase] = {}
         self.plugin_classes: Dict[str, Type[PluginBase]] = {}
 
-    async def load_plugin(self, bot, plugin_class: Type[PluginBase]) -> bool:
+        with open("main_config.toml", "rb") as f:
+            main_config = tomllib.load(f)
+
+        self.excluded_plugins = main_config["XYBot"]["disabled-plugins"]
+
+    async def load_plugin(self, bot: WechatAPIClient, plugin_class: Type[PluginBase]) -> bool:
         """加载单个插件"""
         try:
             plugin_name = plugin_class.__name__
-            if plugin_name in self.plugins:
+            if plugin_name in self.plugins or plugin_name in self.excluded_plugins:
                 return False
 
             plugin = plugin_class()
@@ -29,7 +37,7 @@ class PluginManager:
             self.plugin_classes[plugin_name] = plugin_class
             return True
         except Exception as e:
-            logger.error(f"加载插件 {plugin_class.__name__} 时发生错误: {e}")
+            logger.error(f"加载插件 {plugin_class.__name__} 时发生错误: {traceback.format_exc()}")
             return False
 
     async def unload_plugin(self, plugin_name: str) -> bool:
@@ -44,10 +52,10 @@ class PluginManager:
             del self.plugin_classes[plugin_name]
             return True
         except Exception as e:
-            logger.error(f"卸载插件 {plugin_name} 时发生错误: {e}")
+            logger.error(f"卸载插件 {plugin_name} 时发生错误: {traceback.format_exc()}")
             return False
 
-    async def load_plugins_from_directory(self, bot, directory: str) -> List[str]:
+    async def load_plugins_from_directory(self, bot: WechatAPIClient, directory: str) -> List[str]:
         """从目录批量加载插件"""
         loaded_plugins = []
 
@@ -61,7 +69,7 @@ class PluginManager:
                             if await self.load_plugin(bot, obj):
                                 loaded_plugins.append(obj.__name__)
                 except Exception as e:
-                    logger.error(f"加载插件模块 {module_name} 时发生错误: {e}")
+                    logger.error(f"加载插件模块 {module_name} 时发生错误: {traceback.format_exc()}")
 
         return loaded_plugins
 
@@ -73,7 +81,7 @@ class PluginManager:
                 unloaded_plugins.append(plugin_name)
         return unloaded_plugins
 
-    async def reload_plugin(self, plugin_name: str) -> bool:
+    async def reload_plugin(self, bot: WechatAPIClient, plugin_name: str) -> bool:
         """重载单个插件
         
         Args:
@@ -103,14 +111,14 @@ class PluginManager:
                 if inspect.isclass(obj) and issubclass(obj,
                                                        PluginBase) and obj != PluginBase and obj.__name__ == plugin_name:
                     # 加载新的插件类
-                    return await self.load_plugin(obj)
+                    return await self.load_plugin(bot, plugin_class)
 
             return False
         except Exception as e:
             logger.error(f"重载插件 {plugin_name} 时发生错误: {e}")
             return False
 
-    async def reload_all_plugins(self) -> List[str]:
+    async def reload_all_plugins(self, bot: WechatAPIClient) -> List[str]:
         """重载所有插件
         
         Returns:
@@ -135,8 +143,8 @@ class PluginManager:
                     del sys.modules[module_name]
 
             # 从目录重新加载插件
-            return await self.load_plugins_from_directory(plugin_dir)
+            return await self.load_plugins_from_directory(bot, plugin_dir)
 
         except Exception as e:
-            logger.error(f"重载所有插件时发生错误: {e}")
+            logger.error(f"重载所有插件时发生错误: {traceback.format_exc()}")
             return []
