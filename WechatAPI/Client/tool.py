@@ -1,6 +1,9 @@
 import base64
+import hashlib
 import io
 import os
+import random
+import string
 from random import choice
 
 import aiohttp
@@ -269,7 +272,7 @@ class ToolMixin(WechatAPIClientBase):
         return await ToolMixin.silk_byte_to_byte_wav_byte(base64.b64decode(silk_base64))
 
     @staticmethod
-    def make_device_name() -> str:
+    def create_device_name() -> str:
         """
         生成一个随机的设备名
         :return: str
@@ -295,3 +298,10 @@ class ToolMixin(WechatAPIClientBase):
         ]
 
         return choice(first_names) + " " + choice(last_names) + "'s Pad"
+
+    @staticmethod
+    def create_device_id(s: str = "") -> str:
+        if s == "" or s == "string":
+            s = ''.join(random.choice(string.ascii_letters) for _ in range(15))
+        md5_hash = hashlib.md5(s.encode()).hexdigest()
+        return "49" + md5_hash[2:]

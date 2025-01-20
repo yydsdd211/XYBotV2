@@ -100,7 +100,8 @@ async def main():
     if not os.path.exists(robot_stat_path):
         default_config = {
             "wxid": "",
-            "device_name": ""
+            "device_name": "",
+            "device_id": ""
         }
         os.makedirs(os.path.dirname(robot_stat_path), exist_ok=True)
         with open(robot_stat_path, "w") as f:
@@ -112,6 +113,7 @@ async def main():
 
     wxid = robot_stat.get("wxid", None)
     device_name = robot_stat.get("device_name", None)
+    device_id = robot_stat.get("device_id", None)
 
     if not await bot.is_logged_in(wxid):
         # 需要登录
@@ -122,8 +124,10 @@ async def main():
         else:
             # 二维码登录
             if not device_name:
-                device_name = bot.make_device_name()
-            uuid, url = await bot.get_qr_code(device_name=device_name, print_qr=True)
+                device_name = bot.create_device_name()
+            if not device_id:
+                device_id = bot.create_device_id()
+            uuid, url = await bot.get_qr_code(device_id=device_id, device_name=device_name, print_qr=True)
             logger.success("获取到登录uuid: {}", uuid)
             logger.success("获取到登录二维码: {}", url)
 
@@ -137,15 +141,17 @@ async def main():
         logger.success("登录成功")
 
         # 保存登录信息
+        robot_stat["wxid"] = bot.wxid
+        robot_stat["device_name"] = device_name
+        robot_stat["device_id"] = device_id
+        with open("resource/robot_stat.json", "w") as f:
+            json.dump(robot_stat, f)
+
+        # 获取登录账号信息
         bot.wxid = data.get("acctSectResp").get("userName")
         bot.nickname = data.get("acctSectResp").get("nickName")
         bot.alias = data.get("acctSectResp").get("alias")
         bot.phone = data.get("acctSectResp").get("bindMobile")
-
-        robot_stat["wxid"] = bot.wxid
-        robot_stat["device_name"] = device_name
-        with open("resource/robot_stat.json", "w") as f:
-            json.dump(robot_stat, f)
 
         logger.success("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
                        bot.phone)
@@ -158,8 +164,10 @@ async def main():
         bot.alias = profile.get("Alias")
         bot.phone = profile.get("BindMobile").get("string")
 
-        logger.success("已登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
+        logger.success("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
                        bot.phone)
+
+    logger.success("登录设备信息: device_name: {}  device_id: {}", device_name, device_id)
 
     # ========== 登录完毕 开始初始化 ========== #
 

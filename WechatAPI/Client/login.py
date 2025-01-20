@@ -51,6 +51,7 @@ class LoginMixin(WechatAPIClientBase):
                         border=4,
                     )
                     qr.add_data(f'http://weixin.qq.com/x/{json_resp.get("Data").get("Uuid")}')
+                    qr.make(fit=True)
                     qr.print_ascii()
 
                 return json_resp.get("Data").get("Uuid"), json_resp.get("Data").get("QRCodeURL")
