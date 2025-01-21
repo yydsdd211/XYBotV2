@@ -192,6 +192,15 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
+    def get_whitelist_list(self) -> list:
+        """Get list of all whitelisted users"""
+        session = self.DBSession()
+        try:
+            users = session.query(User).filter_by(whitelist=True).all()
+            return [user.wxid for user in users]
+        finally:
+            session.close()
+
     def safe_trade_points(self, trader_wxid: str, target_wxid: str, num: int) -> bool:
         """Thread-safe points trading between users"""
         session = self.DBSession()

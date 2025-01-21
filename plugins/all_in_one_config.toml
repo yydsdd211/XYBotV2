@@ -35,3 +35,7 @@ command_format = "⚙️管理积分\n\n➕积分：\n加积分 积分 wxid/@用
 [AdminSignInReset]
 enable = true
 command = ["重置签到", "重置签到状态"]
+
+[AdminWhitelist]
+enable = true
+command-format = "⚙️管理白名单\n\n➕白名单：\n添加白名单 wxid/@用户\n\n➖白名单：\n删除白名单 wxid/@用户\n\n📋白名单列表：\n白名单列表"
