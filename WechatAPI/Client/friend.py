@@ -117,6 +117,6 @@ class FriendMixin(WechatAPIClientBase):
         """
         data = await self.get_contract_detail(wxid)
         try:
-            return data.get("ContactList")[0].get("NickName").get("string")
+            return data.get("NickName").get("string")
         except:
             return ""
