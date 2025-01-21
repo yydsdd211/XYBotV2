@@ -120,7 +120,7 @@ class BotDatabase(metaclass=Singleton):
                 .where(User.wxid == wxid)
                 .values(
                     signin_stat=signin_time,
-                    signin_streak=User.signin_streak + 1
+                    signin_streak=User.signin_streak
                 )
             )
             if result.rowcount == 0:
@@ -128,7 +128,7 @@ class BotDatabase(metaclass=Singleton):
                 user = User(
                     wxid=wxid,
                     signin_stat=signin_time,
-                    signin_streak=1
+                    signin_streak=0
                 )
                 session.add(user)
             logger.info(f"数据库: 用户{wxid}登录时间设置为{signin_time}")
