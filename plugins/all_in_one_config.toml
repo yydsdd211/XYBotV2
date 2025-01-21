@@ -18,3 +18,11 @@ command = ["随机图片", "随机图图"]
 [QueryPoint]
 enable = true
 command = ["查询积分", "积分", "我的积分"]
+
+[SignIn]
+enable = true
+command = ["签到", "每日签到", "qd", "Qd", "QD"]
+min-point = 3
+max-point = 20
+streak-cycle = 5 # 每签到?天后，额外积分奖励加1点？
+max-streak-point = 10 # 额外积分奖励上限
