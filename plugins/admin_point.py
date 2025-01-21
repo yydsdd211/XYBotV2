@@ -52,10 +52,13 @@ class AdminPoint(PluginBase):
             return
 
         if command[0] == "加积分":
-            if command[2].startswith("@") and len(message["Ats"]) == 1:
+            if command[2].startswith("@") and len(message["Ats"]) == 1:  # 判断是@还是wxid
                 change_wxid = message["Ats"][0]
-            else:
+            elif "@" not in " ".join(command[2:]):
                 change_wxid = command[2]
+            else:
+                await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n❌请不要手动@！")
+                return
 
             change_point = int(command[1])
             self.db.add_points(change_wxid, change_point)
@@ -72,10 +75,13 @@ class AdminPoint(PluginBase):
             await bot.send_text_message(message["FromWxid"], output)
 
         elif command[0] == "减积分":
-            if command[2].startswith("@") and len(message["Ats"]) == 1:
+            if command[2].startswith("@") and len(message["Ats"]) == 1:  # 判断是@还是wxid
                 change_wxid = message["Ats"][0]
-            else:
+            elif "@" not in " ".join(command[2:]):
                 change_wxid = command[2]
+            else:
+                await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n❌请不要手动@！")
+                return
 
             change_point = int(command[1])
             self.db.add_points(change_wxid, -change_point)
@@ -92,10 +98,13 @@ class AdminPoint(PluginBase):
             await bot.send_text_message(message["FromWxid"], output)
 
         elif command[0] == "设置积分":
-            if command[2].startswith("@") and len(message["Ats"]) == 1:
+            if command[2].startswith("@") and len(message["Ats"]) == 1:  # 判断是@还是wxid
                 change_wxid = message["Ats"][0]
-            else:
+            elif "@" not in " ".join(command[2:]):
                 change_wxid = command[2]
+            else:
+                await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n❌请不要手动@！")
+                return
 
             change_point = int(command[1])
             self.db.set_points(change_wxid, change_point)
