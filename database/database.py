@@ -19,7 +19,7 @@ class User(Base):
                   comment='wxid')
     points = Column(Integer, nullable=False, default=0, comment='points')
     signin_stat = Column(DateTime, nullable=False, default=datetime.datetime.fromtimestamp(0), comment='signin_stat')
-    signin_days = Column(Integer, nullable=False, default=0, comment='signin_days')
+    signin_streak = Column(Integer, nullable=False, default=0, comment='signin_streak')
     whitelist = Column(Boolean, nullable=False, default=False, comment='whitelist')
     llm_record = Column(JSON, nullable=False, default={}, comment='llm_record')
 
@@ -120,7 +120,7 @@ class BotDatabase(metaclass=Singleton):
                 .where(User.wxid == wxid)
                 .values(
                     signin_stat=signin_time,
-                    signin_days=User.signin_days + 1
+                    signin_streak=User.signin_streak + 1
                 )
             )
             if result.rowcount == 0:
@@ -128,7 +128,7 @@ class BotDatabase(metaclass=Singleton):
                 user = User(
                     wxid=wxid,
                     signin_stat=signin_time,
-                    signin_days=1
+                    signin_streak=1
                 )
                 session.add(user)
             logger.info(f"数据库: 用户{wxid}登录时间设置为{signin_time}")
@@ -272,6 +272,37 @@ class BotDatabase(metaclass=Singleton):
             return True
         except Exception as e:
             session.rollback()
+            return False
+        finally:
+            session.close()
+
+    def get_signin_streak(self, wxid: str) -> int:
+        """获取用户连续签到天数"""
+        session = self.DBSession()
+        try:
+            user = session.query(User).filter_by(wxid=wxid).first()
+            return user.signin_streak if user else 0
+        finally:
+            session.close()
+
+    def set_signin_streak(self, wxid: str, streak: int) -> bool:
+        """设置用户连续签到天数"""
+        session = self.DBSession()
+        try:
+            result = session.execute(
+                update(User)
+                .where(User.wxid == wxid)
+                .values(signin_streak=streak)
+            )
+            if result.rowcount == 0:
+                user = User(wxid=wxid, signin_streak=streak)
+                session.add(user)
+            logger.info(f"数据库: 用户{wxid}连续签到天数设置为{streak}")
+            session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"数据库: 用户{wxid}连续签到天数设置失败, 错误: {e}")
             return False
         finally:
             session.close()
