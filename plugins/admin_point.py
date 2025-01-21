@@ -24,7 +24,6 @@ class AdminPoint(PluginBase):
         main_config = main_config["XYBot"]
 
         self.enable = config["enable"]
-        self.command = config["command"]
         self.command_format = config["command_format"]
 
         self.admins = main_config["admins"]
@@ -39,7 +38,7 @@ class AdminPoint(PluginBase):
         content = str(message["Content"]).strip()
         command = content.split(" ")
 
-        if not len(command) or command[0] not in self.command:
+        if not len(command) or command[0] not in ["加积分", "减积分", "设置积分"]:
             return
 
         sender_wxid = message["SenderWxid"]
