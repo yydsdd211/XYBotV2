@@ -14,3 +14,7 @@ api-key = "api-key" # 申请链接： https://dev.qweather.com/  项目订阅选
 [RandomPicture]
 enable = true
 command = ["随机图片", "随机图图"]
+
+[QueryPoint]
+enable = true
+command = ["查询积分", "积分", "我的积分"]
