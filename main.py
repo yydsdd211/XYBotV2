@@ -153,8 +153,6 @@ async def main():
             logger.info("等待登录中，过期倒计时：{}", data)
             await asyncio.sleep(5)
 
-        logger.success("登录成功")
-
         # 保存登录信息
         robot_stat["wxid"] = bot.wxid
         robot_stat["device_name"] = device_name
@@ -168,8 +166,8 @@ async def main():
         bot.alias = data.get("acctSectResp").get("alias")
         bot.phone = data.get("acctSectResp").get("bindMobile")
 
-        logger.success("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
-                       bot.phone)
+        logger.info("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
+                    bot.phone)
 
     else:  # 已登录
         bot.wxid = wxid
@@ -179,10 +177,12 @@ async def main():
         bot.alias = profile.get("Alias")
         bot.phone = profile.get("BindMobile").get("string")
 
-        logger.success("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
-                       bot.phone)
+        logger.info("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
+                    bot.phone)
 
-    logger.success("登录设备信息: device_name: {}  device_id: {}", device_name, device_id)
+    logger.info("登录设备信息: device_name: {}  device_id: {}", device_name, device_id)
+
+    logger.success("登录成功")
 
     # ========== 登录完毕 开始初始化 ========== #
 
@@ -205,7 +205,7 @@ async def main():
     logger.success("定时任务已启动")
 
     # 加载插件目录下的所有插件
-    loaded_plugins = await plugin_manager.load_plugins_from_directory(bot, "plugins")
+    loaded_plugins = await plugin_manager.load_plugins_from_directory(bot, load_disabled_plugin=False)
     logger.success(f"已加载插件: {loaded_plugins}")
 
     # ========== 开始接受消息 ========== #
@@ -219,7 +219,7 @@ async def main():
     logger.info("之前的消息会堆积，10秒后开始处理消息")
     now = time.time()
     while time.time() - now < 10:
-        await ws.recv()
+        await bot.sync_message()
 
     # 开始接受消息
     logger.success("开始处理消息")
@@ -236,8 +236,8 @@ async def main():
 
 if __name__ == "__main__":
     # 防止低版本Python运行
-    if sys.version_info < (3, 11):
-        print("请使用Python 3.11或更高版本")
+    if sys.version_info.major != 3 and sys.version_info.minor != 11:
+        print("请使用Python3.11")
         sys.exit(1)
     print(
         "░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░  \n"

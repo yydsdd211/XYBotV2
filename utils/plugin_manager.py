@@ -24,10 +24,16 @@ class PluginManager:
 
         self.excluded_plugins = main_config["XYBot"]["disabled-plugins"]
 
-    async def load_plugin(self, bot: WechatAPIClient, plugin_class: Type[PluginBase]) -> bool:
+    async def load_plugin(self, bot: WechatAPIClient, plugin_class: Type[PluginBase],
+                          is_disabled: bool = False) -> bool:
         """加载单个插件"""
         try:
             plugin_name = plugin_class.__name__
+
+            # 防止重复加载插件
+            if plugin_name in self.plugins:
+                return False
+
             # 记录插件信息，即使插件被禁用也会记录
             self.plugin_info[plugin_name] = {
                 "name": plugin_name,
@@ -37,8 +43,9 @@ class PluginManager:
                 "enabled": False,
                 "class": plugin_class
             }
-            
-            if plugin_name in self.plugins or plugin_name in self.excluded_plugins:
+
+            # 如果插件被禁用则不加载
+            if is_disabled:
                 return False
 
             plugin = plugin_class()
@@ -48,8 +55,8 @@ class PluginManager:
             self.plugin_classes[plugin_name] = plugin_class
             self.plugin_info[plugin_name]["enabled"] = True
             return True
-        except Exception as e:
-            logger.error(f"加载插件 {plugin_class.__name__} 时发生错误: {traceback.format_exc()}")
+        except:
+            logger.error(f"加载插件时发生错误: {traceback.format_exc()}")
             return False
 
     async def unload_plugin(self, plugin_name: str) -> bool:
@@ -57,54 +64,108 @@ class PluginManager:
         if plugin_name not in self.plugins:
             return False
 
+        # 防止卸载 ManagePlugin
+        if plugin_name == "ManagePlugin":
+            logger.warning("ManagePlugin 不能被卸载")
+            return False
+
         try:
             plugin = self.plugins[plugin_name]
             await plugin.on_disable()
+            EventManager.unbind_instance(plugin)
             del self.plugins[plugin_name]
             del self.plugin_classes[plugin_name]
-            if plugin_name in self.plugin_info:
+            if plugin_name in self.plugin_info.keys():
                 self.plugin_info[plugin_name]["enabled"] = False
             return True
-        except Exception as e:
+        except:
             logger.error(f"卸载插件 {plugin_name} 时发生错误: {traceback.format_exc()}")
             return False
 
-    async def load_plugins_from_directory(self, bot: WechatAPIClient, directory: str) -> List[str]:
-        """从目录批量加载插件"""
+    async def load_plugins_from_directory(self, bot: WechatAPIClient, load_disabled_plugin: bool = True) -> Union[
+        List[str], bool]:
+        """从plugins目录批量加载插件"""
         loaded_plugins = []
 
-        for filename in os.listdir(directory):
+        for filename in os.listdir("plugins"):
             if filename.endswith('.py') and not filename.startswith('__'):
                 module_name = filename[:-3]
                 try:
                     module = importlib.import_module(f"plugins.{module_name}")
                     for name, obj in inspect.getmembers(module):
                         if inspect.isclass(obj) and issubclass(obj, PluginBase) and obj != PluginBase:
-                            if await self.load_plugin(bot, obj):
+                            is_disabled = False
+                            if not load_disabled_plugin:
+                                is_disabled = obj.__name__ in self.excluded_plugins
+
+                            if await self.load_plugin(bot, obj, is_disabled=is_disabled):
                                 loaded_plugins.append(obj.__name__)
-                except Exception as e:
+                except:
                     logger.error(f"加载插件模块 {module_name} 时发生错误: {traceback.format_exc()}")
+                    return False
 
         return loaded_plugins
 
-    async def unload_all_plugins(self) -> List[str]:
+    async def load_plugin_from_directory(self, bot: WechatAPIClient, plugin_name: str) -> bool:
+        """从plugins目录加载单个插件
+
+        Args:
+            bot: 机器人实例
+            plugin_name: 插件类名称（不是文件名）
+
+        Returns:
+            bool: 是否成功加载插件
+        """
+        try:
+            # 遍历plugins目录查找插件
+            for filename in os.listdir("plugins"):
+                if not filename.endswith('.py') or filename.startswith('__'):
+                    continue
+
+                module_name = filename[:-3]
+                try:
+                    # 导入模块
+                    module = importlib.import_module(f"plugins.{module_name}")
+                    importlib.reload(module)  # 重新加载以确保获取最新版本
+
+                    # 在模块中查找指定名称的插件类
+                    for name, obj in inspect.getmembers(module):
+                        if (inspect.isclass(obj) and
+                                issubclass(obj, PluginBase) and
+                                obj != PluginBase and
+                                obj.__name__ == plugin_name):
+                            return await self.load_plugin(bot, obj)
+
+                except:
+                    logger.error(f"检查模块 {module_name} 时发生错误: {traceback.format_exc()}")
+                    continue
+
+            logger.error(f"未找到插件类 {plugin_name}")
+            return False
+
+        except Exception as e:
+            logger.error(f"加载插件 {plugin_name} 时发生错误: {traceback.format_exc()}")
+            return False
+
+    async def unload_all_plugins(self) -> tuple[List[str], List[str]]:
         """卸载所有插件"""
         unloaded_plugins = []
+        failed_unloads = []
         for plugin_name in list(self.plugins.keys()):
             if await self.unload_plugin(plugin_name):
                 unloaded_plugins.append(plugin_name)
-        return unloaded_plugins
+            else:
+                failed_unloads.append(plugin_name)
+        return unloaded_plugins, failed_unloads
 
     async def reload_plugin(self, bot: WechatAPIClient, plugin_name: str) -> bool:
-        """重载单个插件
-        
-        Args:
-            plugin_name: 要重载的插件名称
-            
-        Returns:
-            bool: 重载是否成功
-        """
+        """重载单个插件"""
         if plugin_name not in self.plugin_classes:
+            return False
+
+        # 防止重载 ManagePlugin
+        if plugin_name == "ManagePlugin":
+            logger.warning("ManagePlugin 不能被重载")
             return False
 
         try:
@@ -122,10 +183,12 @@ class PluginManager:
 
             # 从重新加载的模块中获取插件类
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj,
-                                                       PluginBase) and obj != PluginBase and obj.__name__ == plugin_name:
-                    # 加载新的插件类
-                    return await self.load_plugin(bot, plugin_class)
+                if (inspect.isclass(obj) and
+                        issubclass(obj, PluginBase) and
+                        obj != PluginBase and
+                        obj.__name__ == plugin_name):
+                    # 使用新的插件类而不是旧的
+                    return await self.load_plugin(bot, obj)
 
             return False
         except Exception as e:
@@ -139,27 +202,22 @@ class PluginManager:
             List[str]: 成功重载的插件名称列表
         """
         try:
-            # 记录当前加载的插件名称
-            original_plugins = list(self.plugins.keys())
+            # 记录当前加载的插件名称，排除 ManagePlugin
+            original_plugins = [name for name in self.plugins.keys() if name != "ManagePlugin"]
 
-            # 获取插件目录路径（假设所有插件都在同一目录下）
-            if not self.plugins:
-                return []
-            sample_plugin = next(iter(self.plugin_classes.values()))
-            plugin_dir = os.path.dirname(inspect.getfile(sample_plugin))
-
-            # 卸载所有插件
-            await self.unload_all_plugins()
+            # 卸载除 ManagePlugin 外的所有插件
+            for plugin_name in original_plugins:
+                await self.unload_plugin(plugin_name)
 
             # 重新加载所有模块
             for module_name in list(sys.modules.keys()):
-                if module_name.startswith('plugins.'):
+                if module_name.startswith('plugins.') and not module_name == 'plugins.manage_plugin':
                     del sys.modules[module_name]
 
             # 从目录重新加载插件
-            return await self.load_plugins_from_directory(bot, plugin_dir)
+            return await self.load_plugins_from_directory(bot)
 
-        except Exception as e:
+        except:
             logger.error(f"重载所有插件时发生错误: {traceback.format_exc()}")
             return []
 
@@ -175,10 +233,6 @@ class PluginManager:
         if plugin_name:
             return self.plugin_info.get(plugin_name)
         return list(self.plugin_info.values())
-
-    def get_plugin_info_by_name(self, plugin_name: str) -> dict:
-        """获取指定插件的信息"""
-        return self.plugin_info.get(plugin_name)
 
 
 plugin_manager = PluginManager()

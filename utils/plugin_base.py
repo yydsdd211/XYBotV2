@@ -30,7 +30,8 @@ class PluginBase(ABC):
 
                 add_job_safe(scheduler, job_id, method, bot, trigger, **trigger_args)
                 self._scheduled_jobs.add(job_id)
-        logger.success("已加载定时任务: {}", self._scheduled_jobs)
+        if self._scheduled_jobs:
+            logger.success("插件 {} 已加载定时任务: {}", self.__class__.__name__, self._scheduled_jobs)
 
     async def on_disable(self):
         """插件禁用时调用"""

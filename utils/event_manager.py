@@ -1,8 +1,9 @@
 from typing import Callable, Dict, List, Any
 
+
 class EventManager:
     _handlers: Dict[str, List[tuple[Callable, object]]] = {}
-    
+
     @classmethod
     def bind_instance(cls, instance: object):
         """将实例绑定到对应的事件处理函数"""
@@ -19,7 +20,7 @@ class EventManager:
         """触发事件"""
         if event_type not in cls._handlers:
             return []
-        
+
         results = []
         for handler, instance in cls._handlers[event_type]:
             result = handler(*args, **kwargs)
@@ -27,4 +28,13 @@ class EventManager:
                 result = await result
             results.append(result)
 
-        return results 
+        return results
+
+    @classmethod
+    def unbind_instance(cls, instance: object):
+        """解绑实例的所有事件处理函数"""
+        for event_type in cls._handlers:
+            cls._handlers[event_type] = [
+                (handler, inst) for handler, inst in cls._handlers[event_type]
+                if inst is not instance
+            ]
