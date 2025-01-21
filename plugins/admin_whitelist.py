@@ -24,7 +24,6 @@ class AdminWhitelist(PluginBase):
         main_config = main_config["XYBot"]
 
         self.enable = config["enable"]
-        self.command = config["command"]
         self.command_format = config["command-format"]
 
         self.admins = main_config["admins"]
