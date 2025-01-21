@@ -7,7 +7,7 @@ from utils.plugin_base import PluginBase
 
 
 class QueryPoint(PluginBase):
-    description = "示例插件"
+    description = "查询积分"
     author = "HenryXiaoYang"
     version = "1.0.0"
 

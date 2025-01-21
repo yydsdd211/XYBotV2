@@ -9,7 +9,7 @@ from utils.plugin_base import PluginBase
 
 
 class GetWeather(PluginBase):
-    description = "获取天气插件"
+    description = "获取天气"
     author = "HenryXiaoYang"
     version = "1.0.0"
 

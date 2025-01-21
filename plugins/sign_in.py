@@ -11,7 +11,7 @@ from utils.plugin_base import PluginBase
 
 
 class SignIn(PluginBase):
-    description = "示例插件"
+    description = "每日签到"
     author = "HenryXiaoYang"
     version = "1.0.0"
 
