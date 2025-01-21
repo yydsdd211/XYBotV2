@@ -25,7 +25,7 @@ class AdminPoint(PluginBase):
 
         self.enable = config["enable"]
         self.command = config["command"]
-        self.command_format = config["cmd-format"]
+        self.command_format = config["command_format"]
 
         self.admins = main_config["admins"]
 
