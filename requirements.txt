@@ -9,3 +9,4 @@ qrcode~=8.0
 moviepy~=2.1.2
 websockets~=14.1
 pysilk-mod~=1.6.4
+pillow~=10.4.0
