@@ -2,7 +2,6 @@ import tomllib
 
 import aiohttp
 import jieba
-from loguru import logger
 
 from WechatAPI import WechatAPIClient
 from utils.decorators import *
@@ -79,10 +78,6 @@ class GetWeather(PluginBase):
 
         out_message = self.compose_weather_message(country, adm1, adm2, now_weather_api_json, weather_forecast_api_json)
         await bot.send_at_message(message["FromWxid"], "\n" + out_message, [message["SenderWxid"]])
-
-    @on_at_message
-    async def handle_at(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了被@消息")
 
     @staticmethod
     def compose_weather_message(country, adm1, adm2, now_weather_api_json, weather_forecast_api_json):
