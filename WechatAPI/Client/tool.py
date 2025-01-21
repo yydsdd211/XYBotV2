@@ -1,10 +1,6 @@
 import base64
-import hashlib
 import io
 import os
-import random
-import string
-from random import choice
 
 import aiohttp
 import pysilk
@@ -270,38 +266,3 @@ class ToolMixin(WechatAPIClientBase):
     @staticmethod
     async def silk_base64_to_wav_byte(silk_base64: str) -> bytes:
         return await ToolMixin.silk_byte_to_byte_wav_byte(base64.b64decode(silk_base64))
-
-    @staticmethod
-    def create_device_name() -> str:
-        """
-        生成一个随机的设备名
-        :return: str
-        """
-        first_names = [
-            "Oliver", "Emma", "Liam", "Ava", "Noah", "Sophia", "Elijah", "Isabella",
-            "James", "Mia", "William", "Amelia", "Benjamin", "Harper", "Lucas", "Evelyn",
-            "Henry", "Abigail", "Alexander", "Ella", "Jackson", "Scarlett", "Sebastian",
-            "Grace", "Aiden", "Chloe", "Matthew", "Zoey", "Samuel", "Lily", "David",
-            "Aria", "Joseph", "Riley", "Carter", "Nora", "Owen", "Luna", "Daniel",
-            "Sofia", "Gabriel", "Ellie", "Matthew", "Avery", "Isaac", "Mila", "Leo",
-            "Julian", "Layla"
-        ]
-
-        last_names = [
-            "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-            "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
-            "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson",
-            "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker",
-            "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill",
-            "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell",
-            "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans"
-        ]
-
-        return choice(first_names) + " " + choice(last_names) + "'s Pad"
-
-    @staticmethod
-    def create_device_id(s: str = "") -> str:
-        if s == "" or s == "string":
-            s = ''.join(random.choice(string.ascii_letters) for _ in range(15))
-        md5_hash = hashlib.md5(s.encode()).hexdigest()
-        return "49" + md5_hash[2:]

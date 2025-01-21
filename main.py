@@ -148,7 +148,7 @@ async def main():
             logger.success("获取到登录二维码: {}", url)
 
         while True:
-            stat, data = await bot.check_login_uuid(uuid)
+            stat, data = await bot.check_login_uuid(uuid, device_id=device_id)
             if stat:
                 break
             logger.info("等待登录中，过期倒计时：{}", data)

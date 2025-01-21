@@ -1,3 +1,6 @@
+import hashlib
+import string
+from random import choice
 from typing import Union
 
 import aiohttp
@@ -58,11 +61,11 @@ class LoginMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def check_login_uuid(self, uuid: str, awaken_login: bool = False) -> tuple[bool, Union[dict, int]]:
+    async def check_login_uuid(self, uuid: str, device_id: str = "") -> tuple[bool, Union[dict, int]]:
         """
         检查登录的UUID
         :param uuid: 登录的UUID，从获取二维码或者唤醒登录时获取
-        :param awaken_login: 是否是唤醒登录
+        :param device_id: 设备id
         :return: bool, int (bool: True if logged in, int: expired time if not logged in)
         """
         async with aiohttp.ClientSession() as session:
@@ -74,7 +77,7 @@ class LoginMixin(WechatAPIClientBase):
                 if json_resp.get("Data").get("acctSectResp", ""):
                     self.wxid = json_resp.get("Data").get("acctSectResp").get("userName")
                     self.nickname = json_resp.get("Data").get("acctSectResp").get("nickName")
-                    protector.update_login_time(awaken_login=awaken_login)
+                    protector.update_login_status(device_id=device_id)
                     return True, json_resp.get("Data")
                 else:
                     return False, json_resp.get("Data").get("expiredTime")
@@ -217,3 +220,38 @@ class LoginMixin(WechatAPIClientBase):
                 return json_resp.get("Data").get("Running")
             else:
                 return self.error_handler(json_resp)
+
+    @staticmethod
+    def create_device_name() -> str:
+        """
+        生成一个随机的设备名
+        :return: str
+        """
+        first_names = [
+            "Oliver", "Emma", "Liam", "Ava", "Noah", "Sophia", "Elijah", "Isabella",
+            "James", "Mia", "William", "Amelia", "Benjamin", "Harper", "Lucas", "Evelyn",
+            "Henry", "Abigail", "Alexander", "Ella", "Jackson", "Scarlett", "Sebastian",
+            "Grace", "Aiden", "Chloe", "Matthew", "Zoey", "Samuel", "Lily", "David",
+            "Aria", "Joseph", "Riley", "Carter", "Nora", "Owen", "Luna", "Daniel",
+            "Sofia", "Gabriel", "Ellie", "Matthew", "Avery", "Isaac", "Mila", "Leo",
+            "Julian", "Layla"
+        ]
+
+        last_names = [
+            "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+            "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
+            "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson",
+            "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker",
+            "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill",
+            "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell",
+            "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans"
+        ]
+
+        return choice(first_names) + " " + choice(last_names) + "'s Pad"
+
+    @staticmethod
+    def create_device_id(s: str = "") -> str:
+        if s == "" or s == "string":
+            s = ''.join(choice(string.ascii_letters) for _ in range(15))
+        md5_hash = hashlib.md5(s.encode()).hexdigest()
+        return "49" + md5_hash[2:]
