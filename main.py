@@ -9,6 +9,7 @@ import traceback
 from loguru import logger
 
 import WechatAPI
+from WechatAPI.errors import BanProtection
 from database.database import BotDatabase
 from utils.decorators import scheduler
 from utils.plugin_manager import plugin_manager
@@ -230,6 +231,8 @@ async def main():
         for msg in msg_list:
             try:
                 await xybot.process_message(msg)
+            except BanProtection:
+                logger.warning("登录新设备后4小时内请不要操作以避免风控")
             except:
                 logger.error(traceback.format_exc())
 
