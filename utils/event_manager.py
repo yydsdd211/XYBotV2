@@ -1,3 +1,4 @@
+import copy
 from typing import Callable, Dict, List, Any
 
 
@@ -23,7 +24,10 @@ class EventManager:
 
         results = []
         for handler, instance in cls._handlers[event_type]:
-            result = handler(*args, **kwargs)
+            # 对参数进行深拷贝，确保每个处理函数获得独立的参数副本
+            args_copy = copy.deepcopy(args)
+            kwargs_copy = copy.deepcopy(kwargs)
+            result = handler(*args_copy, **kwargs_copy)
             if hasattr(result, '__await__'):
                 result = await result
             results.append(result)
