@@ -236,7 +236,7 @@ async def main():
 
         for msg in msg_list:
             try:
-                await xybot.process_message(msg)
+                asyncio.create_task(xybot.process_message(msg))  # 为了同时处理多个消息，不等待协程运行完毕
             except BanProtection:
                 logger.warning("登录新设备后4小时内请不要操作以避免风控")
             except:
