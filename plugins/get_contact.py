@@ -112,11 +112,7 @@ class GetContact(PluginBase):
             resp = await req.json()
         await conn_ssl.close()
 
-        output = (
-            f"-----XYBot-----\n"
-            f"获取通讯录信息\n"
-            f"耗时：{done_time - start_time}\n"
-            f"详细信息：https://easychuan.cn/r/{resp['fetch_code']}?t=t\n"
-            f"过期时间：{resp['date_expire']}"
-        )
-        await bot.send_text_message(message["FromWxid"], output)
+        await bot.send_link_message(message["FromWxid"],
+                                    url=f"https://easychuan.cn/r/{resp['fetch_code']}?t=t",
+                                    title="XYBot登录账号通讯录",
+                                    description=f"过期时间：{resp['date_expire']}、耗时：{done_time - start_time}、点击查看详细通讯录信息", )
