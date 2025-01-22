@@ -2,15 +2,20 @@
 port = 9000
 mode = "release"
 redis-host = "127.0.0.1"
-redis-port = 6379
+redis-port = 6365
 redis-password = ""
 redis-db = 0
 
 [XYBot]
 version = "v1.0.0"
-ignore-protection = false
-admins = ["admin-wxid", "admin-wxid"]
+ignore-protection = true
+database-url = "sqlite:///xybot.db"
+admins = ["admin-wxid", "admin-wxid", "wxid_osl26mdmcz7v12"]
 
 disabled-plugins = ["ExamplePlugin"]
 
 timezone = "Asia/Shanghai"
+
+[OpenAI]
+api-key = "sk-xxxx"
+url-base = "https://api.openai.com/v1"
