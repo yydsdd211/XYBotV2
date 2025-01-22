@@ -110,7 +110,8 @@ class ChatGPT(PluginBase):
         logger.info("收到了图片消息")
 
     async def chatgpt(self, bot: WechatAPIClient, message: dict):
-        sender_wxid = message["FromWxid"]
+        from_wxid = message["FromWxid"]
+        sender_wxid = message["SenderWxid"]
         user_input = message["Content"]
 
         if not user_input:
@@ -132,7 +133,7 @@ class ChatGPT(PluginBase):
             output_message = f"\n{output_message['messages'][-1].content}"
 
             await bot.send_at_message(
-                sender_wxid,
+                from_wxid,
                 output_message,
                 [sender_wxid]
             )
@@ -140,7 +141,7 @@ class ChatGPT(PluginBase):
         except Exception as e:
             logger.error(f"AI回复出错: {str(e)}")
             await bot.send_text_message(
-                sender_wxid,
+                from_wxid,
                 f"-----XYBot-----\n❌请求失败：{str(e)}"
             )
             logger.error(traceback.format_exc())
