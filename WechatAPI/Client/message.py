@@ -1,17 +1,62 @@
+import asyncio
 import base64
+from asyncio import Future
+from asyncio import Queue, sleep
 from io import BytesIO
 
 import aiohttp
 import moviepy as mp
 import pysilk
+from loguru import logger
 from pydub import AudioSegment
 
 from .base import *
-from ..errors import *
 from .protect import protector
-from loguru import logger
+from ..errors import *
+
 
 class MessageMixin(WechatAPIClientBase):
+    def __init__(self, ip: str, port: int):
+        # 初始化消息队列
+        super().__init__(ip, port)
+        self._message_queue = Queue()
+        self._is_processing = False
+
+    async def _process_message_queue(self):
+        """
+        处理消息队列的异步方法
+        """
+        if self._is_processing:
+            return
+
+        self._is_processing = True
+        while True:
+            if self._message_queue.empty():
+                self._is_processing = False
+                break
+
+            func, args, kwargs, future = await self._message_queue.get()
+            try:
+                result = await func(*args, **kwargs)
+                future.set_result(result)
+            except Exception as e:
+                future.set_exception(e)
+            finally:
+                self._message_queue.task_done()
+                await sleep(0.5)  # 消息发送间隔0.5秒
+
+    async def _queue_message(self, func, *args, **kwargs):
+        """
+        将消息添加到队列
+        """
+        future = Future()
+        await self._message_queue.put((func, args, kwargs, future))
+
+        if not self._is_processing:
+            asyncio.create_task(self._process_message_queue())
+
+        return await future
+
     async def revoke_message(self, wxid: str, client_msg_id: int, create_time: int, new_msg_id: int) -> bool:
         """
         撤回消息
@@ -46,6 +91,12 @@ class MessageMixin(WechatAPIClientBase):
         :param at: list[str]
         :return: int, int, int (int: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_text_message, wxid, content, at)
+
+    async def _send_text_message(self, wxid: str, content: str, at: list[str] = None) -> tuple[int, int, int]:
+        """
+        实际发送文本消息的方法
+        """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -53,10 +104,10 @@ class MessageMixin(WechatAPIClientBase):
 
         if at is None:
             at = []
-        at = ",".join(at)
+        at_str = ",".join(at)
 
         async with aiohttp.ClientSession() as session:
-            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": content, "Type": 1, "At": at}
+            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": content, "Type": 1, "At": at_str}
             response = await session.post(f'http://{self.ip}:{self.port}/SendTextMsg', json=json_param)
             json_resp = await response.json()
             if json_resp.get("Success"):
@@ -75,6 +126,10 @@ class MessageMixin(WechatAPIClientBase):
         :param image_base64: 与image_path二选一
         :return: str, int, int (str: ClientImgId, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_image_message, wxid, image_path, image_base64)
+
+    async def _send_image_message(self, wxid: str, image_path: str = "", image_base64: str = "") -> tuple[
+        int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -111,6 +166,11 @@ class MessageMixin(WechatAPIClientBase):
         :param image_path: 与image_base64二选一
         :return: int, int (int: ClientMsgid, int: NewMsgId)
         """
+        return await self._queue_message(self._send_video_message, wxid, video_base64, image_base64, video_path,
+                                         image_path)
+
+    async def _send_video_message(self, wxid: str, video_base64: str = "", image_base64: str = "", video_path: str = "",
+                                  image_path: str = "") -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -163,6 +223,10 @@ class MessageMixin(WechatAPIClientBase):
         :param format: 语音格式 默认amr，支持wav，mp3
         :return: int, int, int (int: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_voice_message, wxid, voice_base64, voice_path, format)
+
+    async def _send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
+    tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -229,6 +293,10 @@ class MessageMixin(WechatAPIClientBase):
         :param thumburl: 缩略图链接
         :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_link_message, wxid, url, title, description, thumb_url)
+
+    async def _send_link_message(self, wxid: str, url: str, title: str = "", description: str = "",
+                                 thumb_url: str = "") -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -255,6 +323,9 @@ class MessageMixin(WechatAPIClientBase):
         :param total_length: 表情总长度
         :return: list[dict] (list of emojiItem)
         """
+        return await self._queue_message(self._send_emoji_message, wxid, md5, total_length)
+
+    async def _send_emoji_message(self, wxid: str, md5: str, total_length: int) -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -281,6 +352,10 @@ class MessageMixin(WechatAPIClientBase):
         :param card_nickname: 名片昵称
         :return: int, int, int (int: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_card_message, wxid, card_wxid, card_nickname, card_alias)
+
+    async def _send_card_message(self, wxid: str, card_wxid: str, card_nickname: str, card_alias: str = "") -> tuple[
+        int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -308,6 +383,9 @@ class MessageMixin(WechatAPIClientBase):
         :param type: app消息类型
         :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_app_message, wxid, xml, type)
+
+    async def _send_app_message(self, wxid: str, xml: str, type: int) -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -333,6 +411,9 @@ class MessageMixin(WechatAPIClientBase):
         :param xml: 转发的文件，收到的消息xml
         :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_cdn_file_msg, wxid, xml)
+
+    async def _send_cdn_file_msg(self, wxid: str, xml: str) -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -357,6 +438,9 @@ class MessageMixin(WechatAPIClientBase):
         :param xml: 转发的图片，收到的消息xml
         :return: str, int, int (str: ClientImgId, int: CreateTime, int: NewMsgId)
         """
+        return await self._queue_message(self._send_cdn_img_msg, wxid, xml)
+
+    async def _send_cdn_img_msg(self, wxid: str, xml: str) -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -381,6 +465,9 @@ class MessageMixin(WechatAPIClientBase):
         :param xml: 转发的视频，收到的消息xml
         :return: tuple[str, int] (str: ClientMsgid, int: NewMsgId)
         """
+        return await self._queue_message(self._send_cdn_video_msg, wxid, wxid, xml)
+
+    async def _send_cdn_video_msg(self, wxid: str, xml: str) -> tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):

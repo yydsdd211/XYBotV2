@@ -29,6 +29,9 @@ class WechatAPIClientBase:
 
         self.ignore_protect = False
 
+        # 调用所有 Mixin 的初始化方法
+        super().__init__()
+
     @staticmethod
     def error_handler(json_resp):
         code = json_resp.get("Code")

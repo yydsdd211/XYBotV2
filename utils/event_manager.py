@@ -25,7 +25,7 @@ class EventManager:
         results = []
         for handler, instance in cls._handlers[event_type]:
             # 对参数进行深拷贝，确保每个处理函数获得独立的参数副本
-            args_copy = copy.deepcopy(args)
+            args_copy = (args[0], args[1].copy())
             kwargs_copy = copy.deepcopy(kwargs)
             result = handler(*args_copy, **kwargs_copy)
             if hasattr(result, '__await__'):
