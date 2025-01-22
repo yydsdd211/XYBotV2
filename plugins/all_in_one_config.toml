@@ -62,10 +62,6 @@ command-format = """⚙️管理白名单
 📋白名单列表：
 白名单列表"""
 
-[GetContactList]
-enable = true
-command = ["获取通讯录", "通讯录", "通讯录列表"]
-
 [Gomoku]
 enable = true
 command-format = """⚙️五子棋游戏指令:
