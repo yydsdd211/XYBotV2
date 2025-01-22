@@ -16,7 +16,7 @@ from utils.plugin_base import PluginBase
 
 
 class ChatGPT(PluginBase):
-    description = "示例插件"
+    description = "ChatGPT插件"
     author = "HenryXiaoYang"
     version = "1.0.0"
 
