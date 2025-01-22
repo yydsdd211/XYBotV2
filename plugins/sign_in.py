@@ -77,13 +77,13 @@ class SignIn(PluginBase):
                   f"-----XYBot-----\n"
                   f"签到成功！你领到了 {signin_points} 个积分！✅\n")
 
-        if streak:
+        if streak > 1:
             output += f"你连续签到了 {streak} 天！"
 
-        if streak_points:
+        if streak_points > 0:
             output += f" 奖励 {streak_points} 积分！"
 
-        if streak:
+        if streak > 1:
             output += "[爱心]"
 
         await bot.send_at_message(message["FromWxid"], output, [sign_wxid])

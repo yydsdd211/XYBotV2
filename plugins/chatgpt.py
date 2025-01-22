@@ -31,6 +31,17 @@ class ChatGPT(PluginBase):
 
         config = plugin_config["ChatGPT"]
         openai_config = main_config["OpenAI"]
+
+        # get all the command from other plugin
+        self.other_command = []
+        for plugin in plugin_config:
+            if plugin != "ChatGPT":
+                self.other_command.extend(plugin_config[plugin].get("command", []))
+        self.other_command.extend(
+            ["加积分", "减积分", "设置积分", "添加白名单", "移除白名单", "白名单列表", "天气", "五子棋", "五子棋创建",
+             "五子棋邀请", "邀请五子棋", "接受", "加入", "下棋", "加载插件", "加载所有插件", "卸载插件", "卸载所有插件",
+             "重载插件", "重载所有插件", "插件列表"])
+
         main_config = main_config["XYBot"]
 
         self.enable = config["enable"]
@@ -85,7 +96,8 @@ class ChatGPT(PluginBase):
         content = str(message["Content"]).strip()
         command = content.split(" ")
 
-        if not len(command) or command[0] not in self.command and message["IsGroup"]:
+        if not len(command) or command[0] not in self.command or command[0] in self.other_command and message[
+            "IsGroup"]:
             return
 
         if message["IsGroup"]:
