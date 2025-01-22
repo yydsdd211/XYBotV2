@@ -88,7 +88,8 @@ class ChatGPT(PluginBase):
         if not len(command) or command[0] not in self.command and message["IsGroup"]:
             return
 
-        message["Content"] = content[len(command[0]):].strip()
+        if message["IsGroup"]:
+            message["Content"] = content[len(command[0]):].strip()
 
         await self.chatgpt(bot, message)
         return
