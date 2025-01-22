@@ -82,6 +82,7 @@ command-format = """⚙️五子棋游戏指令:
 
 timeout = 60
 command = ["五子棋"]
-create-game-commands = ["五子棋创建", "五子棋邀请"]
+create-game-commands = ["五子棋创建", "五子棋邀请", "邀请五子棋"]
 accept-game-commands = ["接受", "加入"]
 play-game-commands = ["下棋"]
+

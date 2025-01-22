@@ -44,26 +44,25 @@ class Gomoku(PluginBase):
         if not self.enable:
             return
 
-        content = str(message["Content"]).strip()
+        content = str(message["Content"]).strip(" ")
         command = content.split(" ")
-        full_command = " ".join(command[0:2]) if len(command) > 1 else command[0]
 
-        if full_command in self.create_game_commands:
+        if command[0] in self.create_game_commands:
             await self.create_game(bot, message)
-        elif full_command in self.accept_game_commands:
+        elif command[0] in self.accept_game_commands:
             await self.accept_game(bot, message)
-        elif full_command in self.play_game_commands:
+        elif command[0] in self.play_game_commands:
             await self.play_game(bot, message)
-        elif command[0] == self.command:  # 当用户只输入"五子棋"时显示帮助
+        elif command[0] in self.command:  # 当用户只输入"五子棋"时显示帮助
             await bot.send_text_message(message["FromWxid"], f"-----XYBot-----\n{self.command_format}")
 
     async def create_game(self, bot: WechatAPIClient, message: dict):
         """创建五子棋游戏"""
         error = ''
-        room_id = message.get("FromGroup", "")
-        sender = message["FromWxid"]
+        room_id = message["FromWxid"]
+        sender = message["SenderWxid"]
 
-        if not room_id:
+        if not message["IsGroup"]:
             error = '-----XYBot-----\n❌请在群聊中游玩五子棋'
         elif sender in self.gomoku_players:
             error = '-----XYBot-----\n❌您已经在一场游戏中了！'
@@ -73,11 +72,11 @@ class Gomoku(PluginBase):
             return
 
         # 获取被邀请者
-        if not message.get("AtWxids"):
+        if len(message["Ats"]) != 1:
             await bot.send_text_message(room_id, '-----XYBot-----\n❌请@要邀请的玩家！')
             return
 
-        invitee_wxid = message["AtWxids"][0]
+        invitee_wxid = message["Ats"][0]
         if invitee_wxid in self.gomoku_players:
             await bot.send_text_message(room_id, '-----XYBot-----\n❌对方已经在一场游戏中！')
             return
@@ -90,8 +89,11 @@ class Gomoku(PluginBase):
         inviter_nick = await bot.get_nickname(sender)
 
         # 发送邀请消息
-        invite_command = f'五子棋接受 {game_id}'
-        out_message = f'-----XYBot-----\n🎉您收到了来自 {inviter_nick} 的五子棋比赛邀请！\n\n⚙️请在{self.timeout}秒内发送:\n{invite_command}'
+        out_message = (f"\n-----XYBot-----\n"
+                       f"🎉您收到了来自 {inviter_nick} 的五子棋比赛邀请！\n"
+                       f"\n"
+                       f"⚙️请在{self.timeout}秒内发送:\n"
+                       f"五子棋接受 {game_id}")
         await bot.send_at_message(room_id, out_message, [invitee_wxid])
 
         # 创建游戏数据
@@ -110,10 +112,10 @@ class Gomoku(PluginBase):
     async def accept_game(self, bot: WechatAPIClient, message: dict):
         """接受五子棋游戏"""
         error = ''
-        room_id = message.get("FromGroup", "")
-        sender = message["FromWxid"]
+        room_id = message["FromWxid"]
+        sender = message["SenderWxid"]
 
-        if not room_id:
+        if not message["IsGroup"]:
             error = '-----XYBot-----\n❌请在群聊中游玩五子棋'
 
         command = message["Content"].strip().split()
@@ -157,13 +159,18 @@ class Gomoku(PluginBase):
         white_nick = await bot.get_nickname(game['white'])
 
         start_msg = (
-            f'-----XYBot-----\n🎉五子棋游戏 {game_id} 开始！\n\n'
-            f'⚫️黑方：{black_nick}\n'
-            f'⚪️白方：{white_nick}\n\n'
-            f'⚫️黑方先手！\n\n'
-            f'⏰每回合限时：{self.timeout}秒\n\n'
-            f'⚙️请发送: 五子棋下 坐标\n'
-            f'例如: 五子棋下 C5'
+            f"-----XYBot-----\n"
+            f"🎉五子棋游戏 {game_id} 开始！\n"
+            f"\n"
+            f"⚫️黑方：{black_nick}\n"
+            f"⚪️白方：{white_nick}\n"
+            f"\n"
+            f"⏰每回合限时：{self.timeout}秒\n"
+            f"\n"
+            f"⚫️黑方先手！\n"
+            f"\n"
+            f"⚙️请发送: 五子棋下 坐标\n"
+            f"例如: 五子棋下 C5"
         )
         await bot.send_text_message(room_id, start_msg)
 
@@ -179,10 +186,10 @@ class Gomoku(PluginBase):
     async def play_game(self, bot: WechatAPIClient, message: dict):
         """处理下棋操作"""
         error = ''
-        room_id = message.get("FromGroup", "")
-        sender = message["FromWxid"]
+        room_id = message["FromWxid"]
+        sender = message["SenderWxid"]
 
-        if not room_id:
+        if not message["IsGroup"]:
             error = '-----XYBot-----\n❌请在群聊中游玩五子棋'
 
         command = message["Content"].strip().split()
@@ -265,12 +272,14 @@ class Gomoku(PluginBase):
         next_color = '⚫️' if game['turn'] == game['black'] else '⚪️'
 
         turn_msg = (
-            f'-----XYBot-----\n'
-            f'{current_color}{current_nick} 把棋子落在了 {coord}！\n'
-            f'轮到 {next_color}{next_nick} 下子了！\n'
-            f'⏰限时：{self.timeout}秒\n\n'
-            f'⚙️请发送: 五子棋下 坐标\n'
-            f'例如: 五子棋下 C5'
+            f"-----XYBot-----\n"
+            f"{current_color}{current_nick} 把棋子落在了 {coord}！\n"
+            f"轮到 {next_color}{next_nick} 下子了！\n"
+            f"\n"
+            f"⏰限时：{self.timeout}秒\n"
+            f"\n"
+            f"⚙️请发送: 五子棋下 坐标\n"
+            f"例如: 五子棋下 C5"
         )
         await bot.send_text_message(room_id, turn_msg)
 
@@ -394,6 +403,7 @@ class Gomoku(PluginBase):
 
             await bot.send_text_message(
                 room_id,
-                f'-----XYBot-----\n{loser_nick} 落子超时！\n'
+                f'-----XYBot-----\n'
+                f'{loser_nick} 落子超时！\n'
                 f'🏆 {winner_nick} 获胜！'
             )
