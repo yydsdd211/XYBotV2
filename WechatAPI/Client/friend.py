@@ -79,7 +79,10 @@ class FriendMixin(WechatAPIClientBase):
             raise UserLoggedOut("请先登录")
 
         if isinstance(wxid, list):
+            if len(wxid) > 20:
+                raise ValueError("一次最多查询20个联系人")
             wxid = ",".join(wxid)
+
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "RequestWxids": wxid, "Chatroom": chatroom}
@@ -91,21 +94,23 @@ class FriendMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def get_contract_list(self) -> list:
+    async def get_contract_list(self, wx_seq: int = 0, chatroom_seq: int = 0) -> dict:
         """
+        :param wx_seq: 联系人序列
+        :param chatroom_seq: 群聊序列
         获取联系人列表
-        :return: list[dict] (list of contact)
+        :return: dict
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
 
         async with aiohttp.ClientSession() as session:
-            json_param = {"Wxid": self.wxid, "CurrentWxcontactSeq": 0, "CurrentChatroomContactSeq": 0}
+            json_param = {"Wxid": self.wxid, "CurrentWxcontactSeq": wx_seq, "CurrentChatroomContactSeq": chatroom_seq}
             response = await session.post(f'http://{self.ip}:{self.port}/GetContractList', json=json_param)
             json_resp = await response.json()
 
             if json_resp.get("Success"):
-                return json_resp.get("Data").get("ContactUsernameList")
+                return json_resp.get("Data")
             else:
                 self.error_handler(json_resp)
 
