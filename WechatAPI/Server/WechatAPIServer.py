@@ -2,7 +2,6 @@ import os
 import platform
 import subprocess
 import threading
-import time
 
 from loguru import logger
 
@@ -51,7 +50,6 @@ class WechatAPIServer:
 
         self.process = subprocess.Popen(command, cwd=os.path.dirname(os.path.abspath(__file__)), stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
-        time.sleep(3)
         self.log_process = threading.Thread(target=self.process_stdout_to_log, daemon=True)
         self.log_process.start()
 

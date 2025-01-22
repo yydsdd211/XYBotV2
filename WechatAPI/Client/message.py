@@ -485,10 +485,10 @@ class MessageMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def sync_message(self) -> list[dict]:
+    async def sync_message(self) -> dict:
         """
         同步消息
-        :return: list[dict] (list of message)
+        :return: dict
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")

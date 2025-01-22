@@ -217,10 +217,16 @@ async def main():
     logger.success("已连接到WechatAPI WebSocket，开始接受消息")
 
     # 先接受10秒的消息，之前的消息有堆积
-    logger.info("之前的消息会堆积，10秒后开始处理消息")
+    logger.info("处理堆积消息中")
     now = time.time()
     while time.time() - now < 10:
-        await bot.sync_message()
+        data = await bot.sync_message()
+        data = data.get("AddMsgs")
+        if not data:
+            break
+        logger.debug("接受到 {} 条消息", len(data))
+        await asyncio.sleep(1)
+    logger.success("处理堆积消息完毕")
 
     # 开始接受消息
     logger.success("开始处理消息")
