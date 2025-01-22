@@ -1,4 +1,5 @@
 import datetime
+import tomllib
 
 from loguru import logger
 from sqlalchemy import Column, String, Integer, DateTime, create_engine, JSON, Boolean
@@ -21,7 +22,7 @@ class User(Base):
     signin_stat = Column(DateTime, nullable=False, default=datetime.datetime.fromtimestamp(0), comment='signin_stat')
     signin_streak = Column(Integer, nullable=False, default=0, comment='signin_streak')
     whitelist = Column(Boolean, nullable=False, default=False, comment='whitelist')
-    llm_record = Column(JSON, nullable=False, default={}, comment='llm_record')
+    llm_thread_id = Column(JSON, nullable=False, default="", comment='llm_thread_id')
 
 
 class Chatroom(Base):
@@ -30,12 +31,16 @@ class Chatroom(Base):
     chatroom_id = Column(String(20), primary_key=True, nullable=False, unique=True, index=True, autoincrement=False,
                          comment='chatroom_id')
     members = Column(JSON, nullable=False, default=list, comment='members')
-    llm_record = Column(JSON, nullable=False, default=dict, comment='llm_record')
+    llm_thread_id = Column(JSON, nullable=False, default="", comment='llm_thread_id')
 
 
 class BotDatabase(metaclass=Singleton):
     def __init__(self):
-        self.engine = create_engine('sqlite:///userdata.db')
+        with open("main_config.toml", "rb") as f:
+            main_config = tomllib.load(f)
+
+        self.database_url = main_config["XYBot"]["database-url"]
+        self.engine = create_engine(self.database_url)
         self.DBSession = sessionmaker(bind=self.engine)
 
         # 创建表
@@ -244,23 +249,23 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
-    def get_llm_record(self, wxid: str) -> dict:
-        """Get LLM chat record for user or chatroom"""
+    def get_llm_thread_id(self, wxid: str) -> str:
+        """Get LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
             # Check if it's a chatroom ID
             if wxid.endswith("@chatroom"):
                 chatroom = session.query(Chatroom).filter_by(chatroom_id=wxid).first()
-                return chatroom.llm_record if chatroom else {}
+                return chatroom.llm_thread_id if chatroom else ""
             else:
                 # Regular user
                 user = session.query(User).filter_by(wxid=wxid).first()
-                return user.llm_record if user else {}
+                return user.llm_thread_id if user else ""
         finally:
             session.close()
 
-    def save_llm_record(self, wxid: str, data: dict) -> bool:
-        """Save LLM chat record for user or chatroom"""
+    def save_llm_thread_id(self, wxid: str, data: str) -> bool:
+        """Save LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
             # Check if it's a chatroom ID
@@ -269,18 +274,19 @@ class BotDatabase(metaclass=Singleton):
                 if not chatroom:
                     chatroom = Chatroom(chatroom_id=wxid)
                     session.add(chatroom)
-                chatroom.llm_record = data
+                chatroom.llm_thread_id = data
             else:
                 # Regular user
                 user = session.query(User).filter_by(wxid=wxid).first()
                 if not user:
                     user = User(wxid=wxid)
                     session.add(user)
-                user.llm_record = data
+                user.llm_thread_id = data
             session.commit()
             return True
         except Exception as e:
             session.rollback()
+            logger.error(f"数据库: 保存用户llm thread id失败, 错误: {e}")
             return False
         finally:
             session.close()

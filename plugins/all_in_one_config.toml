@@ -82,3 +82,10 @@ create-game-commands = ["五子棋创建", "五子棋邀请", "邀请五子棋"]
 accept-game-commands = ["接受", "加入"]
 play-game-commands = ["下棋"]
 
+[ChatGPT]
+enable = true
+command = ["AI", "gpt", "GPT", "Gpt", "聊天"]
+model = "gpt-4o-mini"
+temperature = 0.7
+max_history_messages = 5  # 最大历史消息数
+context_window = 2000  # 上下文窗口大小
