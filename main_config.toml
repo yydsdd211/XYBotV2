@@ -10,11 +10,13 @@ redis-db = 0
 version = "v1.0.0"
 ignore-protection = true
 database-url = "sqlite:///xybot.db"
-admins = ["admin-wxid", "admin-wxid", "wxid_osl26mdmcz7v12"]
 
+admins = ["admin-wxid", "admin-wxid"]
 disabled-plugins = ["ExamplePlugin"]
-
 timezone = "Asia/Shanghai"
+
+# 试验新功能：如果main_config.toml配置改动，或者plugins文件夹有改动，自动重启。可以在开发时使用，不建议在生产环境使用。
+auto-restart = false
 
 [OpenAI]
 api-key = "sk-xxxx"

@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import sys
 import time
 import tomllib
 import traceback
@@ -16,50 +15,7 @@ from utils.plugin_manager import plugin_manager
 from utils.xybot import XYBot
 
 
-def is_api_message(record):
-    return record["level"].name == "API"
-
-
-@logger.catch
 async def main():
-    # 初始化路径和日志
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-    logger.remove()
-
-    logger.level("API", no=1, color="<cyan>")
-
-    logger.add(
-        "logs/XYBot_{time}.log",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-        encoding="utf-8",
-        enqueue=True,
-        retention="2 weeks",
-        rotation="00:01",
-        backtrace=True,
-        diagnose=True,
-        level="DEBUG",
-    )
-    logger.add(
-        "logs/WechatAPI_{time}.log",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-        encoding="utf-8",
-        enqueue=True,
-        retention="2 weeks",
-        rotation="00:01",
-        filter=is_api_message,
-        level="API",
-    )
-    logger.add(
-        sys.stdout,
-        colorize=True,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
-        level="TRACE",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-    )  # 日志设置
-
     # 读取主设置
     with open("main_config.toml", "rb") as f:
         main_config = tomllib.load(f)
@@ -241,20 +197,3 @@ async def main():
                 logger.warning("登录新设备后4小时内请不要操作以避免风控")
             except:
                 logger.error(traceback.format_exc())
-
-
-if __name__ == "__main__":
-    # 防止低版本Python运行
-    if sys.version_info.major != 3 and sys.version_info.minor != 11:
-        print("请使用Python3.11")
-        sys.exit(1)
-    print(
-        "░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░  \n"
-        "░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░          ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░ \n"
-        "░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒▒▓█▓▒░       ░▒▓█▓▒░ \n"
-        " ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒▒▓█▓▒░ ░▒▓██████▓▒░  \n"
-        "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
-        "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
-        "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░             ░▒▓██▓▒░  ░▒▓████████▓▒░\n")
-
-    asyncio.run(main())
