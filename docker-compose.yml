@@ -1,0 +1,34 @@
+services:
+  xybotv2:
+    build: .
+    container_name: XYBotV2
+    restart: unless-stopped
+    volumes:
+      - xybot:/app
+    networks:
+      - xybot-network
+    depends_on:
+      - dragonfly
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: dragonfly
+    restart: unless-stopped
+    ulimits:
+      memlock: -1
+    volumes:
+      - dragonfly-data:/data
+    networks:
+      - xybot-network
+    ports:
+      - "6379:6379"  # Redis 兼容端口
+
+networks:
+  xybot-network:
+    name: xybot-network
+
+volumes:
+  dragonfly-data:
+    name: dragonfly-data
+  xybot:
+    name: xybot
