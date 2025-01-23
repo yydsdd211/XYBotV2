@@ -8,7 +8,7 @@ redis-db = 0
 
 [XYBot]
 version = "v1.0.0"
-ignore-protection = true
+ignore-protection = false
 database-url = "sqlite:///xybot.db"
 
 admins = ["admin-wxid", "admin-wxid"]
