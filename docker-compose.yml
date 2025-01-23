@@ -1,6 +1,6 @@
 services:
   xybotv2:
-    build: .
+    image: henryxiaoyang/xybotv2:latest
     container_name: XYBotV2
     restart: unless-stopped
     volumes:
