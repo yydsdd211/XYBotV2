@@ -112,12 +112,18 @@ class XYBot:
         message["Content"] = message.get("Content").get("string").replace("\n", "").replace("\t", "")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
-            split_content = message["Content"].split(":", 1)  # 前面去除过\n了
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
             message["IsGroup"] = True
+            split_content = message["Content"].split(":", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         logger.info("收到图片消息: {}", message)
@@ -143,18 +149,21 @@ class XYBot:
     async def process_voice_message(self, message: Dict[str, Any]):
         """处理语音消息"""
         # 预处理消息
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string").replace("\n", "").replace("\t", "")
 
-        if message["FromWxid"].endswith("@chatroom"):
-            split_content = message["Content"].split(":", 1)  # 前面去除过\n了
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
+        if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
             message["IsGroup"] = True
+            split_content = message["Content"].split(":", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         logger.info("收到语音消息: {}", message)
@@ -186,13 +195,19 @@ class XYBot:
         """处理xml消息"""
         message["Content"] = message.get("Content").get("string").replace("\n", "").replace("\t", "")
 
-        if message["FromWxid"].endswith("@chatroom"):
-            split_content = message["Content"].split(":", 1)  # 前面去除过\n了
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
+        if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
             message["IsGroup"] = True
+            split_content = message["Content"].split(":", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         try:
@@ -314,12 +329,18 @@ class XYBot:
         message["Content"] = message.get("Content").get("string")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
-            split_content = message["Content"].split(":", 1)  # 前面去除过\n了
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
             message["IsGroup"] = True
+            split_content = message["Content"].split(":", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         logger.info("收到视频消息: {}", message)
@@ -353,12 +374,18 @@ class XYBot:
         message["Content"] = message.get("Content").get("string")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
-            split_content = message["Content"].split(":", 1)  # 前面去除过\n了
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
             message["IsGroup"] = True
+            split_content = message["Content"].split(":", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         try:
@@ -376,7 +403,7 @@ class XYBot:
             logger.info("未知的系统消息类型: {}", message)
 
     async def process_pat_message(self, message: Dict[str, Any]):
-        """处理好友请求消息"""
+        """处理拍一拍请求消息"""
         try:
             root = ET.fromstring(message["Content"])
             pat = root.find("pat")
