@@ -160,11 +160,11 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
-    def get_leaderboard(self) -> list:
+    def get_leaderboard(self, count: int) -> list:
         """Get points leaderboard"""
         session = self.DBSession()
         try:
-            users = session.query(User).order_by(User.points.desc()).all()
+            users = session.query(User).order_by(User.points.desc()).limit(count).all()
             return [(user.wxid, user.points) for user in users]
         finally:
             session.close()

@@ -68,12 +68,12 @@ class FriendMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def get_contract_detail(self, wxid: Union[str, list[str]], chatroom: str = "") -> dict:
+    async def get_contract_detail(self, wxid: Union[str, list[str]], chatroom: str = "") -> list:
         """
         获取联系人详情
         :param wxid: 联系人wxid
         :param chatroom: 群聊wxid
-        :return: dict (dict of contact detail)
+        :return: list (list of contact detail)
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -90,7 +90,7 @@ class FriendMixin(WechatAPIClientBase):
             json_resp = await response.json()
 
             if json_resp.get("Success"):
-                return json_resp.get("Data").get("ContactList")[0]
+                return json_resp.get("Data").get("ContactList")
             else:
                 self.error_handler(json_resp)
 
@@ -114,14 +114,24 @@ class FriendMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def get_nickname(self, wxid: str) -> str:
+    async def get_nickname(self, wxid: Union[str, list[str]]) -> Union[str, list[str]]:
         """
         获取用户昵称
-        :param wxid: 用户wxid
-        :return: str
+        :param wxid: 用户wxid，可以是单个wxid或最多20个wxid的列表
+        :return: 如果输入单个wxid返回str，如果输入wxid列表则返回对应的昵称列表
         """
         data = await self.get_contract_detail(wxid)
-        try:
-            return data.get("NickName").get("string")
-        except:
-            return ""
+
+        if isinstance(wxid, str):
+            try:
+                return data[0].get("NickName").get("string")
+            except:
+                return ""
+        else:
+            result = []
+            for contact in data:
+                try:
+                    result.append(contact.get("NickName").get("string"))
+                except:
+                    result.append("")
+            return result

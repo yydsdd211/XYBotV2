@@ -85,7 +85,7 @@ play-game-commands = ["下棋"]
 [ChatGPT]
 enable = true
 command = ["AI", "gpt", "GPT", "Gpt", "聊天"]
-model = "gpt-4o-mini-audio-preview-2024-12-17"
+model = "gpt-4o-audio-preview"
 temperature = 0.7
 voice-model = "echo"
 max_history_messages = 5  # 最大历史消息数
@@ -100,3 +100,8 @@ system_prompt = """你是一个叫XYBot友好的微信AI机器人。请用简洁
 [GetContact]
 enable = true
 command = ["获取联系人", "联系人", "通讯录", "获取通讯录"]
+
+[Leaderboard]
+enable = true
+command = ["排行榜", "积分榜", "积分排行榜", "群排行榜", "群积分榜"]
+max-count = 30
