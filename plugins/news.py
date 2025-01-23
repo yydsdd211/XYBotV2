@@ -10,7 +10,7 @@ from utils.plugin_base import PluginBase
 
 
 class News(PluginBase):
-    description = "示例插件"
+    description = "新闻插件"
     author = "HenryXiaoYang"
     version = "1.0.0"
 
