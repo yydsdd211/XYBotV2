@@ -1,5 +1,7 @@
 import tomllib
 
+from tabulate import tabulate
+
 from WechatAPI import WechatAPIClient
 from database import BotDatabase
 from utils.decorators import *
@@ -106,11 +108,13 @@ class ManagePlugin(PluginBase):
         elif command[0] == "插件列表":
             plugin_list = plugin_manager.get_plugin_info()
 
-            output = "插件名称        是否启用"
-
+            plugin_stat = [["插件名称", "是否启用"]]
             for plugin in plugin_list:
-                output += f"\n{plugin['name']:<22}{'✅' if plugin['enabled'] else '❌'}"
-            await bot.send_text_message(message["FromWxid"], output)
+                plugin_stat.append([plugin['name'], "✅" if plugin['enabled'] else "🚫"])
+
+            table = str(tabulate(plugin_stat, headers="firstrow", tablefmt="simple"))
+
+            await bot.send_text_message(message["FromWxid"], table)
 
         elif command[0] == "插件信息":
             attemt = plugin_manager.get_plugin_info(plugin_name)
