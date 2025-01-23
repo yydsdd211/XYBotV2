@@ -181,6 +181,7 @@ async def bot_core():
 
     # 开启自动消息接收
     ws_port = await bot.start_websocket()
+    await asyncio.sleep(0.5)
     ws = await bot.connect_websocket(ws_port)
     logger.success("已连接到WechatAPI WebSocket，开始接受消息")
 
