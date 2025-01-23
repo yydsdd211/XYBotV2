@@ -176,11 +176,11 @@ class ChatGPT(PluginBase):
             return
 
         try:
-            thread_id = self.db.get_llm_thread_id(sender_wxid)
+            thread_id = self.db.get_llm_thread_id(sender_wxid, "chatgpt")
 
             if not thread_id:
                 thread_id = str(uuid4())
-                self.db.save_llm_thread_id(sender_wxid, thread_id)
+                self.db.save_llm_thread_id(sender_wxid, thread_id, "chatgpt")
 
             configurable = {
                 "configurable": {

@@ -22,7 +22,7 @@ class User(Base):
     signin_stat = Column(DateTime, nullable=False, default=datetime.datetime.fromtimestamp(0), comment='signin_stat')
     signin_streak = Column(Integer, nullable=False, default=0, comment='signin_streak')
     whitelist = Column(Boolean, nullable=False, default=False, comment='whitelist')
-    llm_thread_id = Column(JSON, nullable=False, default="", comment='llm_thread_id')
+    llm_thread_id = Column(JSON, nullable=False, default=lambda: {}, comment='llm_thread_id')
 
 
 class Chatroom(Base):
@@ -31,7 +31,7 @@ class Chatroom(Base):
     chatroom_id = Column(String(20), primary_key=True, nullable=False, unique=True, index=True, autoincrement=False,
                          comment='chatroom_id')
     members = Column(JSON, nullable=False, default=list, comment='members')
-    llm_thread_id = Column(JSON, nullable=False, default="", comment='llm_thread_id')
+    llm_thread_id = Column(JSON, nullable=False, default=lambda: {}, comment='llm_thread_id')
 
 
 class BotDatabase(metaclass=Singleton):
@@ -249,39 +249,49 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
-    def get_llm_thread_id(self, wxid: str) -> str:
+    def get_llm_thread_id(self, wxid: str, namespace: str) -> str:
         """Get LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
             # Check if it's a chatroom ID
             if wxid.endswith("@chatroom"):
                 chatroom = session.query(Chatroom).filter_by(chatroom_id=wxid).first()
-                return chatroom.llm_thread_id if chatroom else ""
+                return chatroom.llm_thread_id.get(namespace, "") if chatroom else ""
             else:
                 # Regular user
                 user = session.query(User).filter_by(wxid=wxid).first()
-                return user.llm_thread_id if user else ""
+                return user.llm_thread_id.get(namespace, "") if user else ""
         finally:
             session.close()
 
-    def save_llm_thread_id(self, wxid: str, data: str) -> bool:
+    def save_llm_thread_id(self, wxid: str, data: str, namespace: str) -> bool:
         """Save LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
-            # Check if it's a chatroom ID
+            # 检查是否为群聊ID
             if wxid.endswith("@chatroom"):
                 chatroom = session.query(Chatroom).filter_by(chatroom_id=wxid).first()
                 if not chatroom:
-                    chatroom = Chatroom(chatroom_id=wxid)
+                    chatroom = Chatroom(
+                        chatroom_id=wxid,
+                        llm_thread_id={}  # 初始化为空字典
+                    )
                     session.add(chatroom)
-                chatroom.llm_thread_id = data
+                if chatroom.llm_thread_id is None:  # 确保现有记录也有有效的字典
+                    chatroom.llm_thread_id = {}
+                chatroom.llm_thread_id[namespace] = data
             else:
-                # Regular user
+                # 普通用户
                 user = session.query(User).filter_by(wxid=wxid).first()
                 if not user:
-                    user = User(wxid=wxid)
+                    user = User(
+                        wxid=wxid,
+                        llm_thread_id={}  # 初始化为空字典
+                    )
                     session.add(user)
-                user.llm_thread_id = data
+                if user.llm_thread_id is None:  # 确保现有记录也有有效的字典
+                    user.llm_thread_id = {}
+                user.llm_thread_id[namespace] = data
             session.commit()
             return True
         except Exception as e:
