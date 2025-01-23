@@ -43,7 +43,7 @@ class MessageMixin(WechatAPIClientBase):
                 future.set_exception(e)
             finally:
                 self._message_queue.task_done()
-                await sleep(0.5)  # 消息发送间隔0.5秒
+                await sleep(1)  # 消息发送间隔1秒
 
     async def _queue_message(self, func, *args, **kwargs):
         """

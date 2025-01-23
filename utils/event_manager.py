@@ -1,5 +1,6 @@
+import asyncio
 import copy
-from typing import Callable, Dict, List, Any
+from typing import Callable, Dict, List
 
 
 class EventManager:
@@ -17,22 +18,18 @@ class EventManager:
                 cls._handlers[event_type].append((method, instance))
 
     @classmethod
-    async def emit(cls, event_type: str, *args, **kwargs) -> List[Any]:
+    async def emit(cls, event_type: str, *args, **kwargs) -> None:
         """触发事件"""
         if event_type not in cls._handlers:
-            return []
+            return
 
-        results = []
+        api_client, message = args
         for handler, instance in cls._handlers[event_type]:
-            # 对参数进行深拷贝，确保每个处理函数获得独立的参数副本
-            args_copy = (args[0], args[1].copy())
-            kwargs_copy = copy.deepcopy(kwargs)
-            result = handler(*args_copy, **kwargs_copy)
-            if hasattr(result, '__await__'):
-                result = await result
-            results.append(result)
+            # 只对 message 进行深拷贝，api_client 保持不变
+            handler_args = (api_client, copy.deepcopy(message))
+            new_kwargs = {k: copy.deepcopy(v) for k, v in kwargs.items()}
 
-        return results
+            asyncio.create_task(handler(*handler_args, **new_kwargs))  # 异步执行
 
     @classmethod
     def unbind_instance(cls, instance: object):

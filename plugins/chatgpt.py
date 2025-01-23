@@ -48,8 +48,10 @@ class ChatGPT(PluginBase):
         self.command = config["command"]
         self.model = config["model"]
         self.temperature = config["temperature"]
+        self.voice_model = config["voice-model"]
         self.max_history_messages = config["max_history_messages"]
         self.context_window = config["context_window"]
+        self.system_prompt = config["system_prompt"]
 
         self.api_key = openai_config["api-key"]
         self.url_base = openai_config["url-base"]
@@ -57,11 +59,16 @@ class ChatGPT(PluginBase):
         self.admins = main_config["admins"]
         self.database_url = main_config["database-url"]
 
+        # 创建统一的 LLM 实例，支持文本和音频
         self.llm = ChatOpenAI(
             api_key=self.api_key,
             base_url=self.url_base,
             model=self.model,
-            temperature=self.temperature
+            temperature=self.temperature,
+            model_kwargs={
+                "modalities": ["text", "audio"],
+                "audio": {"voice": self.voice_model, "format": "wav"},
+            }
         )
 
         workflow = StateGraph(state_schema=MessagesState)
@@ -85,8 +92,14 @@ class ChatGPT(PluginBase):
             logger.error(f"关闭数据库连接时出错: {str(e)}")
 
     async def call_model(self, state: MessagesState):
-        response = await self.llm.ainvoke(state["messages"])
-        return {"messages": response}
+        """处理所有类型的消息"""
+        messages = state["messages"]
+        try:
+            response = await self.llm.ainvoke(messages)
+            return {"messages": response}
+        except Exception as e:
+            logger.error(f"模型调用出错: {str(e)}")
+            raise
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):
@@ -96,15 +109,21 @@ class ChatGPT(PluginBase):
         content = str(message["Content"]).strip()
         command = content.split(" ")
 
-        if not len(command) or command[0] not in self.command or command[0] in self.other_command and message[
-            "IsGroup"]:
+        if command[0] not in self.command and message["IsGroup"]:
+            return
+        elif command[0] in self.other_command:
             return
 
         if message["IsGroup"]:
             message["Content"] = content[len(command[0]):].strip()
 
-        await self.chatgpt(bot, message)
-        return
+        output_message = "\n" + await self.chatgpt(bot, message)
+
+        await bot.send_at_message(
+            message["FromWxid"],
+            output_message,
+            [message["SenderWxid"]]
+        )
 
     @on_at_message
     async def handle_at(self, bot: WechatAPIClient, message: dict):
@@ -112,20 +131,45 @@ class ChatGPT(PluginBase):
             return
 
         message["Content"] = str(message["Content"]).replace(f"@{bot.nickname}\u2005", "").strip()
-        await self.chatgpt(bot, message)
+
+        output_message = "\n" + await self.chatgpt(bot, message)
+
+        await bot.send_at_message(
+            message["FromWxid"],
+            output_message,
+            [message["SenderWxid"]]
+        )
+
 
     @on_voice_message
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了语音消息")
+        if not self.enable:
+            return
+
+        if message["IsGroup"]:
+            return
+
+        output_base64 = await self.chatgpt(bot, message)
+        await bot.send_voice_message(message["FromWxid"], voice_base64=output_base64, format="wav")
 
     @on_image_message
     async def handle_image(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了图片消息")
+        if not self.enable:
+            return
+
+        if message["IsGroup"]:
+            return
+
+        await bot.send_text_message(
+            message["FromWxid"],
+            "抱歉，当前模型不支持图片处理功能。"
+        )
 
     async def chatgpt(self, bot: WechatAPIClient, message: dict):
         from_wxid = message["FromWxid"]
         sender_wxid = message["SenderWxid"]
         user_input = message["Content"]
+        is_voice = isinstance(message["Content"], bytes)
 
         if not user_input:
             await bot.send_text_message(sender_wxid, "-----XYBot-----\n请输入要询问的内容")
@@ -136,20 +180,41 @@ class ChatGPT(PluginBase):
 
             if not thread_id:
                 thread_id = str(uuid4())
+                self.db.save_llm_thread_id(sender_wxid, thread_id)
 
-            configurable = {"configurable": {"thread_id": thread_id}}
+            configurable = {
+                "configurable": {
+                    "thread_id": thread_id,
+                    "max_messages": self.max_history_messages,
+                    "context_window": self.context_window
+                }
+            }
 
-            self.db.save_llm_thread_id(sender_wxid, thread_id)
+            if is_voice:
+                # 语音输入
+                wav_base64 = bot.byte_to_base64(user_input)
+                input_message = [
+                    HumanMessage(content=self.system_prompt),
+                    HumanMessage(content=[
+                        {"type": "input_audio", "input_audio": {"data": wav_base64, "format": "wav"}},
+                    ])
+                ]
+            else:
+                # 文本输入
+                input_message = [
+                    HumanMessage(content=self.system_prompt),
+                    HumanMessage(content=user_input)
+                ]
 
-            input_message = [HumanMessage(user_input)]
-            output_message = await self.app.ainvoke({"messages": input_message}, configurable)
-            output_message = f"\n{output_message['messages'][-1].content}"
+            # 使用 app 处理消息以保持上下文
+            output = await self.app.ainvoke({"messages": input_message}, configurable)
+            last_message = output["messages"][-1]
 
-            await bot.send_at_message(
-                from_wxid,
-                output_message,
-                [sender_wxid]
-            )
+            # 根据消息类型返回相应的内容
+            if is_voice and 'audio' in last_message.additional_kwargs:
+                return last_message.additional_kwargs['audio']['data']
+            else:
+                return last_message.additional_kwargs['audio']['transcript']
 
         except Exception as e:
             logger.error(f"AI回复出错: {str(e)}")
@@ -158,3 +223,4 @@ class ChatGPT(PluginBase):
                 f"-----XYBot-----\n❌请求失败：{str(e)}"
             )
             logger.error(traceback.format_exc())
+

@@ -85,10 +85,17 @@ play-game-commands = ["下棋"]
 [ChatGPT]
 enable = true
 command = ["AI", "gpt", "GPT", "Gpt", "聊天"]
-model = "gpt-4o-mini"
+model = "gpt-4o-audio-preview"
 temperature = 0.7
+voice-model = "echo"
 max_history_messages = 5  # 最大历史消息数
 context_window = 2000  # 上下文窗口大小
+system_prompt = """你是一个叫XYBot友好的微信AI机器人。请用简洁、专业的方式回答问题。
+- 回答不能以换行符开头
+- 回答要用纯文本，不能使用Markdown语法
+- 用户用什么语言问，就用什么语言回答
+- 如果用户问了关于微信机器人的问题，统一回答请查阅菜单中的帮助
+- 对于代码相关问题，请提供清晰的示例和解释"""
 
 [GetContact]
 enable = true
