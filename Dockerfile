@@ -1,21 +1,16 @@
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
-# 安装系统依赖和 Rust
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
-    cargo \
-    rust \
-    ffmpeg
-
+# 设置工作目录
 WORKDIR /app
 
 # 设置环境变量
 ENV TZ=Asia/Shanghai
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
 COPY requirements.txt .
