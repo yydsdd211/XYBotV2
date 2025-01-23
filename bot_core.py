@@ -4,6 +4,7 @@ import os
 import time
 import tomllib
 import traceback
+from pathlib import Path
 
 from loguru import logger
 
@@ -16,8 +17,12 @@ from utils.xybot import XYBot
 
 
 async def bot_core():
+    # 设置工作目录
+    script_dir = Path(__file__).resolve().parent
+    
     # 读取主设置
-    with open("main_config.toml", "rb") as f:
+    config_path = script_dir / "main_config.toml"
+    with open(config_path, "rb") as f:
         main_config = tomllib.load(f)
 
     logger.success("读取主设置成功")
@@ -58,7 +63,7 @@ async def bot_core():
     # ==========登陆==========
 
     # 检查并创建robot_stat.json文件
-    robot_stat_path = "resource/robot_stat.json"
+    robot_stat_path = script_dir / "resource" / "robot_stat.json"
     if not os.path.exists(robot_stat_path):
         default_config = {
             "wxid": "",

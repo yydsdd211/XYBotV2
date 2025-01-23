@@ -42,8 +42,13 @@ class ConfigChangeHandler(FileSystemEventHandler):
 
 
 async def main():
+    # 设置工作目录为脚本所在目录
+    script_dir = Path(__file__).resolve().parent
+    os.chdir(script_dir)
+    
     # 读取配置文件
-    with open("main_config.toml", "rb") as f:
+    config_path = script_dir / "main_config.toml"
+    with open(config_path, "rb") as f:
         config = tomllib.load(f)
 
     # 检查是否启用自动重启
@@ -113,8 +118,6 @@ if __name__ == "__main__":
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░            ░▒▓█▓▓█▓▒░ ░▒▓█▓▒░        \n"
         "░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░   ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░             ░▒▓██▓▒░  ░▒▓████████▓▒░\n")
-
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     logger.remove()
 
