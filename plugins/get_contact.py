@@ -50,7 +50,7 @@ class GetContact(PluginBase):
             await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n❌你配用这个指令吗？😡")
             return
 
-        await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n正在获取通讯录信息，请稍等...")
+        a, b, c = await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n正在获取通讯录信息，请稍等...")
 
         start_time = datetime.now()
         logger.info("开始获取通讯录信息时间：{}", start_time)
@@ -116,3 +116,5 @@ class GetContact(PluginBase):
                                     url=f"https://easychuan.cn/r/{resp['fetch_code']}?t=t",
                                     title="XYBot登录账号通讯录",
                                     description=f"过期时间：{resp['date_expire']}、耗时：{done_time - start_time}、点击查看详细通讯录信息", )
+
+        await bot.revoke_message(message["FromWxid"], a, b, c)
