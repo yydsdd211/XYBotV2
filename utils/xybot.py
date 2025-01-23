@@ -26,6 +26,17 @@ class XYBot:
         """处理接收到的消息"""
         msg_type = message.get("MsgType")
 
+        # 预处理消息
+        message["FromWxid"] = message.get("FromUserName").get("string")
+        message.pop("FromUserName")
+        message["ToWxid"] = message.get("ToWxid").get("string")
+
+        # 处理一下自己发的消息
+        if message["FromWxid"] == self.wxid and message["ToWxid"].endswith("@chatroom"):  # 自己发发到群聊
+            # 由于是自己发送的消息，所以对于自己来说，From和To是反的
+            message["FromWxid"], message["ToWxid"] = message["ToWxid"], message["FromWxid"]
+
+
         # 根据消息类型触发不同的事件
         if msg_type == 1:  # 文本消息
             await self.process_text_message(message)
@@ -59,18 +70,22 @@ class XYBot:
     async def process_text_message(self, message: Dict[str, Any]):
         """处理文本消息"""
         # 预处理消息
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
-            split_content = message["Content"].split(":\n", 1)
-            message["Content"] = split_content[1]
-            message["SenderWxid"] = split_content[0]
             message["IsGroup"] = True
+            split_content = message["Content"].split(":\n", 1)
+            if len(split_content) > 1:
+                message["Content"] = split_content[1]
+                message["SenderWxid"] = split_content[0]
+            else:  # 绝对是自己发的消息! qwq
+                message["Content"] = split_content[0]
+                message["SenderWxid"] = self.wxid
+
         else:
             message["SenderWxid"] = message["FromWxid"]
+            if message["FromWxid"] == self.wxid:  # 自己发的消息
+                message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
 
         try:
@@ -94,9 +109,6 @@ class XYBot:
     async def process_image_message(self, message: Dict[str, Any]):
         """处理图片消息"""
         # 预处理消息
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string").replace("\n", "").replace("\t", "")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
@@ -172,9 +184,6 @@ class XYBot:
 
     async def process_xml_message(self, message: Dict[str, Any]):
         """处理xml消息"""
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string").replace("\n", "").replace("\t", "")
 
         if message["FromWxid"].endswith("@chatroom"):
@@ -302,9 +311,6 @@ class XYBot:
 
     async def process_video_message(self, message):
         # 预处理消息
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
@@ -344,9 +350,6 @@ class XYBot:
     async def process_system_message(self, message: Dict[str, Any]):
         """处理系统消息"""
         # 预处理消息
-        message["FromWxid"] = message.get("FromUserName").get("string")
-        message.pop("FromUserName")
-        message["ToWxid"] = message.get("ToWxid").get("string")
         message["Content"] = message.get("Content").get("string")
 
         if message["FromWxid"].endswith("@chatroom"):  # 群聊消息
