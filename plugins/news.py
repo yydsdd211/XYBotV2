@@ -78,7 +78,7 @@ class News(PluginBase):
                 id_list.append(id)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
+            async with session.get("https://dayu.qqsuu.cn/moyuribao/apis.php?type=img") as resp:
                 iamge_byte = await resp.read()
 
         for id in id_list:
@@ -103,7 +103,7 @@ class News(PluginBase):
                 id_list.append(id)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://zj.v.api.aa1.cn/api/60s") as resp:
+            async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
                 iamge_byte = await resp.read()
 
         for id in id_list:
