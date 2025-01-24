@@ -4,9 +4,9 @@ services:
     container_name: XYBotV2
     restart: unless-stopped
     volumes:
-      - xybot:/app
+      - xybotv2:/app
     networks:
-      - xybot-network
+      - xybotv2-network
     depends_on:
       - dragonfly
 
@@ -19,16 +19,16 @@ services:
     volumes:
       - dragonfly-data:/data
     networks:
-      - xybot-network
+      - xybotv2-network
     ports:
       - "6379:6379"  # Redis 兼容端口
 
 networks:
-  xybot-network:
-    name: xybot-network
+  xybotv2-network:
+    name: xybotv2-network
 
 volumes:
   dragonfly-data:
     name: dragonfly-data
-  xybot:
-    name: xybot
+  xybotv2:
+    name: xybotv2
