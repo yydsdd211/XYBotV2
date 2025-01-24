@@ -180,3 +180,13 @@ cost = 80
 "0.20" = { name = "蓝", points = 81, symbol = "🟦" }
 "0.30" = { name = "绿", points = 75, symbol = "🟩" }
 "0.34" = { name = "白", points = 65, symbol = "⬜️" }
+
+[RedPacket]
+enable = true
+command-format = """⚙️红包系统：
+发红包 积分 数量
+抢红包 口令"""
+max-point = 1000
+min-point = 1
+max-packet = 10
+max-time = 300
