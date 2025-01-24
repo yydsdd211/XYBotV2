@@ -298,7 +298,7 @@ class Gomoku(PluginBase):
 
     def _draw_board(self, game_id: str, highlight: tuple = None) -> str:
         """绘制棋盘并返回base64编码"""
-        board_img = Image.open('resources/gomoku_board_original.png')
+        board_img = Image.open('resource/images/gomoku_board_original.png')
         draw = ImageDraw.Draw(board_img)
 
         board = self.gomoku_games[game_id]['board']
