@@ -6,6 +6,7 @@ import tomllib
 import traceback
 from pathlib import Path
 
+import dotenv
 from loguru import logger
 
 import WechatAPI
@@ -31,16 +32,24 @@ async def bot_core():
     server = WechatAPI.WechatAPIServer()
 
     api_config = main_config.get("WechatAPIServer", {})
+    env_config = dotenv.dotenv_values()
+
+    if env_config.get("REDIS_HOST", None):
+        redis_host = env_config.get("REDIS_HOST")
+    else:
+        redis_host = api_config.get("redis-host")
+
+    logger.debug("最终使用的 Redis 主机地址: {}", redis_host)
 
     server.start(port=api_config.get("port", 9000),
                  mode=api_config.get("mode", "release"),
-                 redis_host=api_config.get("redis-host", "127.0.0.1"),
+                 redis_host=redis_host,
                  redis_port=api_config.get("redis-port", 6379),
                  redis_password=api_config.get("redis-password", ""),
                  redis_db=api_config.get("redis-db", 0))
 
     # 实例化WechatAPI客户端
-    bot = WechatAPI.WechatAPIClient("127.0.0.1", api_config.get("port", 9000))
+    bot = WechatAPI.WechatAPIClient("localhost", api_config.get("port", 9000))
     bot.ignore_protect = main_config.get("XYBot", {}).get("ignore-protection", False)
 
     # 等待WechatAPI服务启动

@@ -22,7 +22,7 @@ class WechatAPIServer:
     def __del__(self):
         self.stop()
 
-    def start(self, port: int = 9000, mode: str = "release", redis_host: str = None, redis_port: int = 6379,
+    def start(self, port: int = 9000, mode: str = "release", redis_host: str = "127.0.0.1", redis_port: int = 6379,
               redis_password: str = "", redis_db: int = 0):
         """
         Start WechatAPI server
@@ -34,9 +34,6 @@ class WechatAPIServer:
         :param redis_db:
         :return:
         """
-
-        if redis_host is None:
-            redis_host = get_redis_host()
 
         arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port", str(redis_port),
                      "--redis-password", redis_password, "--redis-db", str(redis_db)]
@@ -72,15 +69,13 @@ class WechatAPIServer:
 
 def is_running_in_docker():
     """检查是否在 Docker 容器中运行"""
+    # 添加日志输出来调试
     try:
         with open('/proc/1/cgroup', 'r') as f:
-            return 'docker' in f.read() or 'kubepods' in f.read()
-    except:
+            content = f.read()
+            is_docker = 'docker' in content or 'kubepods' in content
+            logger.debug("Docker 检测结果: {}, cgroup 内容: {}", is_docker, content)
+            return is_docker
+    except Exception as e:
+        logger.debug("Docker 检测异常: {}", str(e))
         return False
-
-
-def get_redis_host():
-    """根据运行环境返回 Redis 主机地址"""
-    if is_running_in_docker():
-        return "dragonfly"  # Docker 环境使用容器名
-    return "127.0.0.1"

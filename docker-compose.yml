@@ -9,6 +9,8 @@ services:
       - xybotv2-network
     depends_on:
       - dragonfly
+    environment:
+      - REDIS_HOST=dragonfly
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly
