@@ -6,7 +6,6 @@ import tomllib
 import traceback
 from pathlib import Path
 
-import dotenv
 from loguru import logger
 
 import WechatAPI
@@ -20,7 +19,7 @@ from utils.xybot import XYBot
 async def bot_core():
     # 设置工作目录
     script_dir = Path(__file__).resolve().parent
-    
+
     # 读取主设置
     config_path = script_dir / "main_config.toml"
     with open(config_path, "rb") as f:
@@ -32,12 +31,8 @@ async def bot_core():
     server = WechatAPI.WechatAPIServer()
 
     api_config = main_config.get("WechatAPIServer", {})
-    env_config = dotenv.dotenv_values()
 
-    if env_config.get("REDIS_HOST", None):
-        redis_host = env_config.get("REDIS_HOST")
-    else:
-        redis_host = api_config.get("redis-host")
+    redis_host = os.getenv("REDIS_HOST", api_config.get("redis-host"))
 
     logger.debug("最终使用的 Redis 主机地址: {}", redis_host)
 
