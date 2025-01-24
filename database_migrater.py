@@ -24,12 +24,13 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = 'user'
 
-    wxid = Column(String(20), primary_key=True, nullable=False, unique=True, index=True)
-    points = Column(Integer, nullable=False, default=0)
-    signin_stat = Column(DateTime, nullable=False, default=datetime.datetime.fromtimestamp(0))
-    signin_streak = Column(Integer, nullable=False, default=0)
-    whitelist = Column(Boolean, nullable=False, default=False)
-    llm_thread_id = Column(JSON, nullable=False, default="")
+    wxid = Column(String(20), primary_key=True, nullable=False, unique=True, index=True, autoincrement=False,
+                  comment='wxid')
+    points = Column(Integer, nullable=False, default=0, comment='points')
+    signin_stat = Column(DateTime, nullable=False, default=datetime.datetime.fromtimestamp(0), comment='signin_stat')
+    signin_streak = Column(Integer, nullable=False, default=0, comment='signin_streak')
+    whitelist = Column(Boolean, nullable=False, default=False, comment='whitelist')
+    llm_thread_id = Column(JSON, nullable=False, default=lambda: {}, comment='llm_thread_id')
 
 
 class Chatroom(Base):
