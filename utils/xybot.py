@@ -4,6 +4,7 @@ from typing import Dict, Any
 from loguru import logger
 
 from WechatAPI import WechatAPIClient
+from WechatAPI.Client import protector
 from utils.event_manager import EventManager
 
 
@@ -24,6 +25,10 @@ class XYBot:
 
     async def process_message(self, message: Dict[str, Any]):
         """处理接收到的消息"""
+        if protector.check(14400):
+            logger.warning("登录新设备后4小时内请不要操作以避免风控")
+            return
+
         msg_type = message.get("MsgType")
 
         # 预处理消息
