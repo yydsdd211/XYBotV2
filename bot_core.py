@@ -83,13 +83,23 @@ async def bot_core():
     device_id = robot_stat.get("device_id", None)
 
     if not await bot.is_logged_in(wxid):
-        # 需要登录
-        try:
-            if await bot.get_cached_info(wxid):
-                # 尝试唤醒登录
-                uuid = await bot.awaken_login(wxid)
-                logger.success("获取到登录uuid: {}", uuid)
-            else:
+        while not await bot.is_logged_in(wxid):
+            # 需要登录
+            try:
+                if await bot.get_cached_info(wxid):
+                    # 尝试唤醒登录
+                    uuid = await bot.awaken_login(wxid)
+                    logger.success("获取到登录uuid: {}", uuid)
+                else:
+                    # 二维码登录
+                    if not device_name:
+                        device_name = bot.create_device_name()
+                    if not device_id:
+                        device_id = bot.create_device_id()
+                    uuid, url = await bot.get_qr_code(device_id=device_id, device_name=device_name, print_qr=True)
+                    logger.success("获取到登录uuid: {}", uuid)
+                    logger.success("获取到登录二维码: {}", url)
+            except:
                 # 二维码登录
                 if not device_name:
                     device_name = bot.create_device_name()
@@ -98,22 +108,13 @@ async def bot_core():
                 uuid, url = await bot.get_qr_code(device_id=device_id, device_name=device_name, print_qr=True)
                 logger.success("获取到登录uuid: {}", uuid)
                 logger.success("获取到登录二维码: {}", url)
-        except:
-            # 二维码登录
-            if not device_name:
-                device_name = bot.create_device_name()
-            if not device_id:
-                device_id = bot.create_device_id()
-            uuid, url = await bot.get_qr_code(device_id=device_id, device_name=device_name, print_qr=True)
-            logger.success("获取到登录uuid: {}", uuid)
-            logger.success("获取到登录二维码: {}", url)
 
-        while True:
-            stat, data = await bot.check_login_uuid(uuid, device_id=device_id)
-            if stat:
-                break
-            logger.info("等待登录中，过期倒计时：{}", data)
-            await asyncio.sleep(5)
+            while True:
+                stat, data = await bot.check_login_uuid(uuid, device_id=device_id)
+                if stat:
+                    break
+                logger.info("等待登录中，过期倒计时：{}", data)
+                await asyncio.sleep(5)
 
         # 保存登录信息
         robot_stat["wxid"] = bot.wxid
