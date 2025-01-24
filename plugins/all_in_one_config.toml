@@ -21,7 +21,7 @@ command = ["随机图片", "随机图图"]
 
 [QueryPoint]
 enable = true
-command = ["查询积分", "积分", "我的积分"]
+command = ["查询积分", "积分", "我的积分", "积分查询"]
 
 [SignIn]
 enable = true
@@ -89,7 +89,6 @@ model = "gpt-4o-audio-preview"
 temperature = 0.7
 voice-model = "echo"
 max_history_messages = 5  # 最大历史消息数
-context_window = 2000  # 上下文窗口大小
 system_prompt = """你是一个叫XYBot友好的微信AI机器人。请用简洁、专业的方式回答问题。
 - 回答不能以换行符开头
 - 回答要用纯文本，不能使用Markdown语法

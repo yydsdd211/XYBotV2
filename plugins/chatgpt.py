@@ -50,7 +50,6 @@ class ChatGPT(PluginBase):
         self.temperature = config["temperature"]
         self.voice_model = config["voice-model"]
         self.max_history_messages = config["max_history_messages"]
-        self.context_window = config["context_window"]
         self.system_prompt = config["system_prompt"]
 
         self.api_key = openai_config["api-key"]
@@ -186,7 +185,6 @@ class ChatGPT(PluginBase):
                 "configurable": {
                     "thread_id": thread_id,
                     "max_messages": self.max_history_messages,
-                    "context_window": self.context_window
                 }
             }
 
