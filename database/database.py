@@ -268,31 +268,33 @@ class BotDatabase(metaclass=Singleton):
         """Save LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
-            # 检查是否为群聊ID
             if wxid.endswith("@chatroom"):
                 chatroom = session.query(Chatroom).filter_by(chatroom_id=wxid).first()
                 if not chatroom:
                     chatroom = Chatroom(
                         chatroom_id=wxid,
-                        llm_thread_id={}  # 初始化为空字典
+                        llm_thread_id={}
                     )
                     session.add(chatroom)
-                if chatroom.llm_thread_id is None:  # 确保现有记录也有有效的字典
-                    chatroom.llm_thread_id = {}
-                chatroom.llm_thread_id[namespace] = data
+                # 创建新字典并更新
+                new_thread_ids = dict(chatroom.llm_thread_id or {})
+                new_thread_ids[namespace] = data
+                chatroom.llm_thread_id = new_thread_ids
             else:
-                # 普通用户
                 user = session.query(User).filter_by(wxid=wxid).first()
                 if not user:
                     user = User(
                         wxid=wxid,
-                        llm_thread_id={}  # 初始化为空字典
+                        llm_thread_id={}
                     )
                     session.add(user)
-                if user.llm_thread_id is None:  # 确保现有记录也有有效的字典
-                    user.llm_thread_id = {}
-                user.llm_thread_id[namespace] = data
+                # 创建新字典并更新
+                new_thread_ids = dict(user.llm_thread_id or {})
+                new_thread_ids[namespace] = data
+                user.llm_thread_id = new_thread_ids
+            
             session.commit()
+            logger.info(f"数据库: 成功保存 {wxid} 的 llm thread id")
             return True
         except Exception as e:
             session.rollback()
