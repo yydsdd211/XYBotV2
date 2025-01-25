@@ -6,6 +6,7 @@ import tomllib
 import traceback
 from pathlib import Path
 
+import websockets
 from loguru import logger
 
 import WechatAPI
@@ -15,6 +16,72 @@ from utils.decorators import scheduler
 from utils.plugin_manager import plugin_manager
 from utils.xybot import XYBot
 
+
+async def handle_message(xybot, msg):
+    """处理单条消息"""
+    try:
+        await xybot.process_message(msg)
+    except BanProtection:
+        logger.warning("登录新设备后4小时内请不要操作以避免风控")
+    except Exception:
+        logger.error(traceback.format_exc())
+
+
+async def process_websocket_messages(ws, xybot):
+    """处理WebSocket接收到的消息"""
+    try:
+        recv = await ws.recv()
+        msg_list = json.loads(recv).get("Data")
+
+        for msg in msg_list:
+            asyncio.create_task(handle_message(xybot, msg))
+
+    except websockets.exceptions.ConnectionClosed:
+        logger.warning("WebSocket连接已断开，准备重连...")
+        raise  # 重新抛出异常以触发重连
+    except Exception as e:
+        logger.error(f"处理消息时发生错误: {str(e)}")
+        logger.error(traceback.format_exc())
+
+
+async def websocket_client_loop(bot, ws_port, xybot):
+    """WebSocket客户端主循环"""
+    while True:
+        try:
+            # 建立WebSocket连接
+            ws = await bot.connect_websocket(ws_port)
+            logger.success("已连接到WechatAPI WebSocket，开始接受消息")
+
+            # 启动心跳任务
+            ping_task = asyncio.create_task(keep_alive(ws))
+
+            try:
+                # 消息处理循环
+                while True:
+                    await process_websocket_messages(ws, xybot)
+            finally:
+                # 确保心跳任务被清理
+                ping_task.cancel()
+
+        except Exception as e:
+            logger.error(f"WebSocket连接发生错误: {str(e)}")
+
+        # 重连延迟
+        await asyncio.sleep(5)
+        logger.info("尝试重新连接WebSocket...")
+
+
+async def keep_alive(websocket):
+    """保持WebSocket连接的心跳函数"""
+    try:
+        while True:
+            await asyncio.sleep(30)  # 每30秒发送一次ping
+            try:
+                await websocket.ping()
+            except:
+                break
+    except asyncio.CancelledError:
+        pass
 
 async def bot_core():
     # 设置工作目录
@@ -192,19 +259,6 @@ async def bot_core():
     # 开启自动消息接收
     ws_port = await bot.start_websocket()
     await asyncio.sleep(0.5)
-    ws = await bot.connect_websocket(ws_port)
-    logger.success("已连接到WechatAPI WebSocket，开始接受消息")
 
-    # 开始接受消息
-    logger.success("开始处理消息")
-    while True:
-        recv = await ws.recv()
-        msg_list = json.loads(recv).get("Data")
-
-        for msg in msg_list:
-            try:
-                asyncio.create_task(xybot.process_message(msg))  # 为了同时处理多个消息，不等待协程运行完毕
-            except BanProtection:
-                logger.warning("登录新设备后4小时内请不要操作以避免风控")
-            except:
-                logger.error(traceback.format_exc())
+    # 启动WebSocket客户端
+    await websocket_client_loop(bot, ws_port, xybot)
