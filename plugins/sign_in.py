@@ -52,11 +52,12 @@ class SignIn(PluginBase):
         sign_wxid = message["SenderWxid"]
 
         last_sign = self.db.get_signin_stat(sign_wxid)
-        now = datetime.now(tz=pytz.timezone(self.timezone))
+        now = datetime.now(tz=pytz.timezone(self.timezone)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         # 确保 last_sign 用了时区
         if last_sign and last_sign.tzinfo is None:
             last_sign = pytz.timezone(self.timezone).localize(last_sign)
+        last_sign = last_sign.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if last_sign and (now - last_sign).days < 1:
             output = "\n-----XYBot-----\n你今天已经签到过了！😠"
