@@ -60,33 +60,6 @@ class News(PluginBase):
                     image_byte = await resp.read()
             await bot.send_image_message(message["FromWxid"], image_base64=bot.byte_to_base64(image_byte))
 
-    @schedule('cron', hour=7)
-    async def morning_news(self, bot: WechatAPIClient):
-        id_list = []
-        wx_seq, chatroom_seq = 0, 0
-        while True:
-            contact_list = await bot.get_contract_list(wx_seq, chatroom_seq)
-            id_list.extend(contact_list["ContactUsernameList"])
-            wx_seq = contact_list["CurrentWxcontactSeq"]
-            chatroom_seq = contact_list["CurrentChatRoomContactSeq"]
-            if contact_list["CountinueFlag"] != 1:
-                break
-
-        for i in range(len(id_list)):
-            id = id_list.pop()
-            if id.endswith("@chatroom"):
-                id_list.append(id)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://dayu.qqsuu.cn/moyuribao/apis.php?type=img") as resp:
-                iamge_byte = await resp.read()
-
-        image_base64 = bot.byte_to_base64(iamge_byte)
-
-        for id in id_list:
-            await bot.send_image_message(id, image_base64=image_base64)
-            await asyncio.sleep(2)
-
     @schedule('cron', hour=12)
     async def noon_news(self, bot: WechatAPIClient):
         id_list = []
@@ -99,10 +72,10 @@ class News(PluginBase):
             if contact_list["CountinueFlag"] != 1:
                 break
 
-        for i in range(len(id_list)):
-            id = id_list.pop()
+        chatrooms = []
+        for id in id_list:
             if id.endswith("@chatroom"):
-                id_list.append(id)
+                chatrooms.append(id)
 
         async with aiohttp.ClientSession() as session:
             async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
@@ -110,7 +83,7 @@ class News(PluginBase):
 
         image_base64 = bot.byte_to_base64(iamge_byte)
 
-        for id in id_list:
+        for id in chatrooms:
             await bot.send_image_message(id, image_base64=image_base64)
             await asyncio.sleep(2)
 
@@ -126,10 +99,10 @@ class News(PluginBase):
             if contact_list["CountinueFlag"] != 1:
                 break
 
-        for i in range(len(id_list)):
-            id = id_list.pop()
+        chatrooms = []
+        for id in id_list:
             if id.endswith("@chatroom"):
-                id_list.append(id)
+                chatrooms.append(id)
 
         async with aiohttp.ClientSession() as session:
             async with session.get("https://v.api.aa1.cn/api/60s-v3/?cc=XYBot") as resp:
@@ -137,6 +110,6 @@ class News(PluginBase):
 
         image_base64 = bot.byte_to_base64(iamge_byte)
 
-        for id in id_list:
+        for id in chatrooms:
             await bot.send_image_message(id, image_base64=image_base64)
             await asyncio.sleep(2)
