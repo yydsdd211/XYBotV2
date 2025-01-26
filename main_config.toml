@@ -20,4 +20,4 @@ auto-restart = false
 
 [OpenAI]
 api-key = "sk-xxxx"
-url-base = "https://api.openai.com/v1"
+base-url = "https://api.openai.com/v1"
