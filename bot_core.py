@@ -63,7 +63,7 @@ async def process_websocket_messages(ws, xybot):
     except websockets.exceptions.ConnectionClosed as e:
         logger.warning(f"WebSocket连接已断开 (code: {e.code}, reason: {e.reason})")
         raise
-        
+
     except Exception as e:
         logger.error(f"处理消息时发生错误: {str(e)}")
         logger.error(traceback.format_exc())
@@ -80,7 +80,7 @@ async def websocket_client_loop(bot, ws_port, xybot):
 
             # 设置pong处理器
             ws.pong_handler = lambda _: logger.debug("收到服务器pong响应")
-            
+
             # 启动心跳任务
             ping_task = asyncio.create_task(keep_alive(ws))
 
@@ -299,9 +299,13 @@ async def bot_core():
         await asyncio.sleep(1)
     logger.success("处理堆积消息完毕")
 
-    # 开启自动消息接收
-    ws_port = await bot.start_websocket()
-    await asyncio.sleep(0.5)
-
-    # 启动WebSocket客户端
-    await websocket_client_loop(bot, ws_port, xybot)
+    logger.success("开始处理消息")
+    while True:
+        now = time.time()
+        data = await bot.sync_message()
+        data = data.get("AddMsgs", None)
+        if data:
+            for message in data:
+                asyncio.create_task(handle_message(xybot, message))
+            while time.time() - now < 1:
+                pass
