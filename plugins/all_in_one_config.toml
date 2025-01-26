@@ -82,20 +82,6 @@ create-game-commands = ["五子棋创建", "五子棋邀请", "邀请五子棋"]
 accept-game-commands = ["接受", "加入"]
 play-game-commands = ["下棋"]
 
-[ChatGPT]
-enable = true
-command = ["AI", "gpt", "GPT", "Gpt", "聊天", "ChatGPT", "chatgpt"]
-model = "gpt-4o-audio-preview"
-temperature = 0.7
-voice-model = "echo"
-max_history_messages = 5  # 最大历史消息数
-system_prompt = """你是一个叫XYBot友好的微信AI机器人。请用简洁、专业的方式回答问题。
-- 回答不能以换行符开头
-- 回答要用纯文本，不能使用Markdown语法
-- 用户用什么语言问，就用什么语言回答
-- 如果用户问了关于微信机器人的问题，统一回答请查阅菜单中的帮助
-- 对于代码相关问题，请提供清晰的示例和解释"""
-
 [GetContact]
 enable = true
 command = ["获取联系人", "联系人", "通讯录", "获取通讯录"]
@@ -252,3 +238,43 @@ admin-menu = """-----XYBot-----
 enable = true
 command = ["随机成员", "随机群员", "随机群成员", "随机群用户"]
 count = 3
+
+[Ai]
+enable = true # 总开关
+
+enable-command = true # 是开启指令调用？
+enable-at = true # 是否对@机器人进行处理？
+enable-private = true # 是否处理私聊消息？
+
+command = ["清除历史记录", "清除记录", "清除所有人历史记录", "清除所有历史记录", "清除所有记录", "AI", "gpt", "GPT", "Gpt", "聊天", "ChatGPT", "chatgpt"]
+
+# 重要：接口需要是OpenAI API格式
+base-url = ""   # 会覆盖来自主设置的设置。不设置则会从主设置读取。
+api-key = ""   # 会覆盖来自主设置的设置。不设置则会从主设置读取。
+
+# AI模型名
+model-name = "gpt-4o-audio-preview"
+
+# 模型支持哪些输入？
+text-input = true
+image-input = false
+voice-input = true
+
+# 模型会给哪些输出？
+text-output = true
+image-output = false
+voice-output = true
+
+# 模型具体设置
+temperature = 0.7
+max-history-messages = 5  # 最大历史消息数
+model_kwargs = { "audio" = { "voice" = "echo" } } # 可填入更多模型设置
+
+# AI prompt
+prompt = """你是一个叫XYBot友好的微信AI机器人。请用简洁、专业的方式回答问题。
+- 回答不能以换行符开头
+- 回答要用纯文本，不能使用Markdown语法
+- 用户用什么语言问，就用什么语言回答
+- 如果用户问了关于微信机器人的问题，例如：怎么获取积分？怎么使用ChatGPT功能？，统一回答请查阅菜单中的帮助
+- 对于代码相关问题，请提供清晰的示例和解释"""
+

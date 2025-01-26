@@ -1,5 +1,6 @@
 import datetime
 import tomllib
+from typing import Union
 
 from loguru import logger
 from sqlalchemy import Column, String, Integer, DateTime, create_engine, JSON, Boolean
@@ -249,18 +250,24 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
-    def get_llm_thread_id(self, wxid: str, namespace: str) -> str:
+    def get_llm_thread_id(self, wxid: str, namespace: str = None) -> Union[dict, str]:
         """Get LLM thread id for user or chatroom"""
         session = self.DBSession()
         try:
             # Check if it's a chatroom ID
             if wxid.endswith("@chatroom"):
                 chatroom = session.query(Chatroom).filter_by(chatroom_id=wxid).first()
-                return chatroom.llm_thread_id.get(namespace, "") if chatroom else ""
+                if namespace:
+                    return chatroom.llm_thread_id.get(namespace, "") if chatroom else ""
+                else:
+                    return chatroom.llm_thread_id if chatroom else {}
             else:
                 # Regular user
                 user = session.query(User).filter_by(wxid=wxid).first()
-                return user.llm_thread_id.get(namespace, "") if user else ""
+                if namespace:
+                    return user.llm_thread_id.get(namespace, "") if user else ""
+                else:
+                    return user.llm_thread_id if user else {}
         finally:
             session.close()
 
@@ -302,6 +309,22 @@ class BotDatabase(metaclass=Singleton):
             return False
         finally:
             session.close()
+
+    def delete_all_llm_thread_id(self):
+        """Clear llm thread id for everyone"""
+        session = self.DBSession()
+        try:
+            session.query(User).update({User.llm_thread_id: {}})
+            session.query(Chatroom).update({Chatroom.llm_thread_id: {}})
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            logger.error(f"数据库: 清除所有用户llm thread id失败, 错误: {e}")
+            return False
+        finally:
+            session.close()
+
 
     def get_signin_streak(self, wxid: str) -> int:
         """获取用户连续签到天数"""
