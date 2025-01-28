@@ -206,7 +206,7 @@ class ToolMixin(WechatAPIClientBase):
         :param byte: bytes
         :return: str
         """
-        return base64.b64encode(byte).decode()
+        return base64.b64encode(byte).decode("utf-8")
 
     @staticmethod
     async def silk_byte_to_byte_wav_byte(silk_byte: bytes) -> bytes:

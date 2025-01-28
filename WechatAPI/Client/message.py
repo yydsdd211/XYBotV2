@@ -214,7 +214,7 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
-            list[tuple[int, int, int]]:
+            tuple[int, int, int]:
         """
         发送语音消息
         :param wxid: 接受人
@@ -226,7 +226,7 @@ class MessageMixin(WechatAPIClientBase):
         return await self._queue_message(self._send_voice_message, wxid, voice_base64, voice_path, format)
 
     async def _send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
-            list[tuple[int, int, int]]:
+            tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
@@ -236,61 +236,58 @@ class MessageMixin(WechatAPIClientBase):
         elif format not in ["amr", "wav", "mp3"]:
             raise ValueError("format must be one of amr, wav, mp3")
 
-        # 加载音频
+        duration = 0
         if format == "amr":
             if voice_path:
+                with open(voice_path, 'rb') as f:
+                    voice_base64 = base64.b64encode(f.read()).decode()
                 audio = AudioSegment.from_file(voice_path, format="amr")
-            else:
+                duration = len(audio)
+            elif voice_base64:
                 audio = AudioSegment.from_file(BytesIO(base64.b64decode(voice_base64)), format="amr")
+                duration = len(audio)
         elif format == "wav":
             if voice_path:
-                audio = AudioSegment.from_wav(voice_path).set_channels(1)
-            else:
-                audio = AudioSegment.from_wav(BytesIO(base64.b64decode(voice_base64))).set_channels(1)
-        else:
+                audio = AudioSegment.from_wav(voice_path).set_channels(1).set_frame_rate(16000)
+                duration = len(audio)
+                voice_base64 = base64.b64encode(
+                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+            elif voice_base64:
+                audio = AudioSegment.from_wav(BytesIO(base64.b64decode(voice_base64))).set_channels(1).set_frame_rate(
+                    16000)
+                duration = len(audio)
+                voice_base64 = base64.b64encode(
+                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+        elif format == "mp3":
             if voice_path:
-                audio = AudioSegment.from_mp3(voice_path).set_channels(1)
-            else:
-                audio = AudioSegment.from_mp3(BytesIO(base64.b64decode(voice_base64))).set_channels(1)
-
-        # 按60秒分段
-        segment_length = 60 * 1000  # 60秒，单位毫秒
-        segments = []
-        for i in range(0, len(audio), segment_length):
-            segment = audio[i:i + segment_length]
-            segment_base64 = base64.b64encode(
-                await pysilk.async_encode(segment.raw_data, sample_rate=segment.frame_rate)).decode()
-            segments.append((segment_base64, len(segment)))
+                audio = AudioSegment.from_mp3(voice_path).set_channels(1).set_frame_rate(16000)
+                duration = len(audio)
+                voice_base64 = base64.b64encode(
+                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+            elif voice_base64:
+                audio = AudioSegment.from_mp3(BytesIO(base64.b64decode(voice_base64))).set_channels(1).set_frame_rate(
+                    16000)
+                duration = len(audio)
+                voice_base64 = base64.b64encode(
+                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+        else:
+            raise ValueError("Please provide either voice_path or voice_base64")
 
         format_dict = {"amr": 0, "wav": 4, "mp3": 4}
-        results = []
 
-        # 逐段发送
         async with aiohttp.ClientSession() as session:
-            for segment_base64, duration in segments:
-                json_param = {
-                    "Wxid": self.wxid,
-                    "ToWxid": wxid,
-                    "Base64": segment_base64,
-                    "VoiceTime": duration,
-                    "Type": format_dict[format]
-                }
-                response = await session.post(f'http://{self.ip}:{self.port}/SendVoiceMsg', json=json_param)
-                json_resp = await response.json()
+            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Base64": voice_base64, "VoiceTime": duration,
+                          "Type": format_dict[format]}
+            response = await session.post(f'http://{self.ip}:{self.port}/SendVoiceMsg', json=json_param)
+            json_resp = await response.json()
 
-                if json_resp.get("Success"):
-                    json_param.pop('Base64')
-                    logger.info(f"发送语音消息: {json_param}")
-                    data = json_resp.get("Data")
-                    results.append((
-                        int(data.get("ClientMsgId")),
-                        data.get("CreateTime"),
-                        data.get("NewMsgId")
-                    ))
-                else:
-                    self.error_handler(json_resp)
-
-        return results
+            if json_resp.get("Success"):
+                json_param.pop('Base64')
+                logger.info(f"发送语音消息: {json_param}")
+                data = json_resp.get("Data")
+                return int(data.get("ClientMsgId")), data.get("CreateTime"), data.get("NewMsgId")
+            else:
+                self.error_handler(json_resp)
 
     async def send_link_message(self, wxid: str, url: str, title: str = "", description: str = "",
                                 thumb_url: str = "") -> tuple[str, int, int]:

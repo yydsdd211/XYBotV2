@@ -1,3 +1,7 @@
+import base64
+import imghdr
+import io
+import json
 import tomllib
 import traceback
 from uuid import uuid4
@@ -8,11 +12,18 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from loguru import logger
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 
 from WechatAPI import WechatAPIClient
 from database import BotDatabase
 from utils.decorators import *
 from utils.plugin_base import PluginBase
+
+
+class GenerateImage(BaseModel):
+    """Generate a image using AI. 用AI生成一个图片。"""
+    prompt: str = Field(..., description="The prompt(or description) of image")
 
 
 class Ai(PluginBase):
@@ -44,13 +55,19 @@ class Ai(PluginBase):
 
         main_config = main_config["XYBot"]
 
+        # 读取 [Ai] 设置
         self.enable = config["enable"]
+
+        self.ai_db_url = config["database-url"]
+
         self.enable_command = config["enable-command"]
         self.enable_at = config["enable-at"]
         self.enable_private = config["enable-private"]
 
         self.command = config["command"]
 
+        # 读取 [Ai.MainModel] 设置
+        config = plugin_config["Ai"]["MainModel"]
         self.base_url = config["base-url"] if config["base-url"] else openai_config["base-url"]
         self.api_key = config["api-key"] if config["api-key"] else openai_config["api-key"]
 
@@ -58,11 +75,18 @@ class Ai(PluginBase):
 
         self.text_input = config["text-input"]
         self.image_input = config["image-input"]
+        self.image_formats = config["image-formats"]
         self.voice_input = config["voice-input"]
+
+        if self.voice_input not in ["None", "Native", "NonNative"]:
+            logger.error("AI插件设置错误：voice-input 必须为 None 或者 Native 或者 NonNative")
 
         self.text_output = config["text-output"]
         self.image_output = config["image-output"]
         self.voice_output = config["voice-output"]
+
+        if self.voice_output not in ["None", "Native", "NonNative"]:
+            logger.error("AI插件设置错误：voice-output 必须为 None 或者 Native 或者 NonNative")
 
         self.temperature = config["temperature"]
         self.max_history_messages = config["max-history-messages"]
@@ -70,15 +94,12 @@ class Ai(PluginBase):
 
         self.prompt = config["prompt"]
 
-        self.admins = main_config["admins"]
-        self.database_url = main_config["database-url"]
-
         modalities = []
         if self.text_output:
             modalities.append("text")
         if self.image_output:
             modalities.append("image")
-        if self.voice_output:
+        if self.voice_output == "Native":
             modalities.append("audio")
             if not self.model_kwargs.get("audio", None):
                 self.model_kwargs["audio"] = {}
@@ -86,6 +107,36 @@ class Ai(PluginBase):
 
         self.model_kwargs["modalities"] = modalities
 
+        # 读取 [Ai.GenerateImage] 设置
+        config = plugin_config["Ai"]["GenerateImage"]
+        self.image_base_url = config["base-url"] if config["base-url"] else openai_config["base-url"]
+        self.image_api_key = config["api-key"] if config["api-key"] else openai_config["api-key"]
+        self.image_model_name = config["model-name"]
+        self.image_size = config["size"]
+        self.image_additional_param = config["additional-param"]
+
+        if self.image_output:
+            self.prompt += config["add-prompt"]
+
+        # 读取 [Ai.SpeechToText] 设置
+        config = plugin_config["Ai"]["SpeechToText"]
+        self.speech2text_base_url = config["base-url"] if config["base-url"] else openai_config["base-url"]
+        self.speech2text_api_key = config["api-key"] if config["api-key"] else openai_config["api-key"]
+        self.speech2text_model_name = config["model-name"]
+
+        # 读取 [Ai.TextToSpeech] 设置
+        config = plugin_config["Ai"]["TextToSpeech"]
+        self.text2speech_base_url = config["base-url"] if config["base-url"] else openai_config["base-url"]
+        self.text2speech_api_key = config["api-key"] if config["api-key"] else openai_config["api-key"]
+        self.text2speech_model_name = config["model-name"]
+        self.text2speech_voice = config["voice"]
+        self.text2speech_speed = config["speed"]
+        self.text2speech_additional_param = config["additional-param"]
+
+        # 读取主设置
+        self.admins = main_config["admins"]
+
+        # 初始化langchain
         self.llm = ChatOpenAI(
             api_key=self.api_key,
             base_url=self.base_url,
@@ -94,8 +145,15 @@ class Ai(PluginBase):
             model_kwargs=self.model_kwargs
         )
 
+        # tool-call
+        if self.image_output:
+            tools = [GenerateImage]
+            self.llm = self.llm.bind_tools(tools)
+
+        # 初始化机器人数据库
         self.db = BotDatabase()
 
+        # 准备异步初始化
         self.sqlite_conn = None
         self.sqlite_saver = None
         self.ai = None
@@ -104,8 +162,7 @@ class Ai(PluginBase):
 
     async def async_init(self):
         if not self.inited:
-            db_path = self.database_url.replace('sqlite:///', '')
-            self.sqlite_conn = await aiosqlite.connect(db_path)
+            self.sqlite_conn = await aiosqlite.connect(self.ai_db_url)
             self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
 
             workflow = StateGraph(state_schema=MessagesState)
@@ -115,6 +172,8 @@ class Ai(PluginBase):
             self.ai = workflow.compile(checkpointer=self.sqlite_saver)
 
             self.inited = True
+
+            logger.info("AI插件数据库初始化完毕")
 
     def __del__(self):
         """确保资源被正确释放"""
@@ -127,6 +186,13 @@ class Ai(PluginBase):
     async def call_model(self, state: MessagesState):
         """处理所有类型的消息"""
         messages = state["messages"]
+
+        # 限制历史消息数量
+        if len(messages) > self.max_history_messages:
+            # 保留系统提示(第一条)和最近的消息
+            messages = [messages[0]] + messages[-self.max_history_messages + 1:]
+            state["messages"] = messages  # 更新状态中的消息列表
+
         try:
             response = await self.llm.ainvoke(messages)
             return {"messages": response}
@@ -154,9 +220,6 @@ class Ai(PluginBase):
         elif command[0] in self.other_command:
             return
 
-        if message["IsGroup"]:
-            message["Content"] = content[len(command[0]):].strip()
-
         if "清除历史记录" in message["Content"] or "清除记录" in message["Content"]:
             return await self.delete_user_thread_id(bot, message)
         elif "清除所有人历史记录" in message["Content"] or "清除所有历史记录" in message["Content"] or "清除所有记录" in \
@@ -183,17 +246,12 @@ class Ai(PluginBase):
                     [message["SenderWxid"]]
                 )
 
-        result = await self.get_ai_response(bot, message)
-        if not result:
-            logger.warning("AI插件有问题")
             return
-        output_message = "\n" + await self.get_ai_response(bot, message)
 
-        await bot.send_at_message(
-            message["FromWxid"],
-            output_message,
-            [message["SenderWxid"]]
-        )
+        if message["IsGroup"]:
+            message["Content"] = content[len(command[0]):].strip()
+
+        await self.get_ai_response(bot, message)
 
     @on_at_message
     async def handle_at(self, bot: WechatAPIClient, message: dict):
@@ -207,19 +265,7 @@ class Ai(PluginBase):
 
         message["Content"] = str(message["Content"]).replace(f"@{bot.nickname}\u2005", "").strip()
 
-        result = await self.get_ai_response(bot, message)
-
-        if not result:
-            logger.warning("AI插件有问题")
-            return
-
-        output_message = "\n" + await self.get_ai_response(bot, message)
-
-        await bot.send_at_message(
-            message["FromWxid"],
-            output_message,
-            [message["SenderWxid"]]
-        )
+        await self.get_ai_response(bot, message)
 
     @on_voice_message
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
@@ -234,13 +280,7 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        result = await self.get_ai_response(bot, message)
-        if not result:
-            logger.warning("AI插件有问题")
-            return
-
-        output_base64 = await self.get_ai_response(bot, message)
-        await bot.send_voice_message(message["FromWxid"], voice_base64=output_base64, format="wav")
+        await self.get_ai_response(bot, message)
 
     @on_image_message
     async def handle_image(self, bot: WechatAPIClient, message: dict):
@@ -255,17 +295,7 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        result = await self.get_ai_response(bot, message)
-        if not result:
-            logger.warning("AI插件有问题")
-            return
-        output_message = "\n" + await self.get_ai_response(bot, message)
-
-        await bot.send_at_message(
-            message["FromWxid"],
-            output_message,
-            [message["SenderWxid"]]
-        )
+        await self.get_ai_response(bot, message)
 
     @schedule('cron', hour=5)
     async def reset_chat_history(self, bot: WechatAPIClient):
@@ -295,7 +325,6 @@ class Ai(PluginBase):
             configurable = {
                 "configurable": {
                     "thread_id": thread_id,
-                    "max_messages": self.max_history_messages,
                 }
             }
 
@@ -305,22 +334,42 @@ class Ai(PluginBase):
                     HumanMessage(content=self.prompt),
                     HumanMessage(content=user_input)
                 ]
+
             elif message["MsgType"] == 3 and self.image_input:  # 图片输入
                 image_base64 = user_input
+
+                image_format = self.get_img_format(image_base64)
+                # 检查图片格式
+                if image_format not in self.image_formats:
+                    await bot.send_at_message(
+                        from_wxid,
+                        f"-----XYBot-----\n⚠️不支持该图片格式！支持: {self.image_formats}",
+                        [sender_wxid]
+                    )
+                    return None
                 input_message = [
                     HumanMessage(content=self.prompt),
                     HumanMessage(content=[
-                        {"type": "image_url", "image_url": {"url": f"data:image;base64,{image_base64}"}},
+                        {"type": "image_url", "image_url": {"url": f"data:image/{image_format};base64,{image_base64}"}},
                     ])
                 ]
-            elif message["MsgType"] == 34 and self.voice_input:  # 语音输入
-                wav_base64 = bot.byte_to_base64(user_input)
-                input_message = [
-                    HumanMessage(content=self.prompt),
-                    HumanMessage(content=[
-                        {"type": "input_audio", "input_audio": {"data": wav_base64, "format": "wav"}},
-                    ])
-                ]
+
+            elif message["MsgType"] == 34 and self.voice_input != "None":  # 语音输入
+                if self.voice_input == "Native":
+                    wav_base64 = bot.byte_to_base64(user_input)
+                    input_message = [
+                        HumanMessage(content=self.prompt),
+                        HumanMessage(content=[
+                            {"type": "input_audio", "input_audio": {"data": wav_base64, "format": "wav"}},
+                        ])
+                    ]
+                else:
+                    text_input = await self.get_text_from_voice(user_input)
+                    input_message = [
+                        HumanMessage(content=self.prompt),
+                        HumanMessage(content=text_input)
+                    ]
+
             else:
                 raise ValueError("未知的输入格式！")
 
@@ -330,21 +379,53 @@ class Ai(PluginBase):
             last_message = output["messages"][-1]
 
             # 什么类型输入，什么类型输出
-            if message["MsgType"] == 1 and self.text_output:
-                if "audio" in last_message.additional_kwargs:
-                    return last_message.additional_kwargs['audio']['transcript']
-                return last_message.content
+            if message["MsgType"] == 1 and self.text_output:  # 文本输出
+                if self.voice_output == "Native":
+                    output = last_message.additional_kwargs['audio']['transcript']
+                else:
+                    output = last_message.content
 
-            elif message["MsgType"] == 3 and self.image_output:
-                return last_message.content
+                if output:
+                    await bot.send_at_message(from_wxid, "\n" + output, [sender_wxid])
 
-            elif message["MsgType"] == 34 and self.voice_output:
-                if "audio" in last_message.additional_kwargs:
-                    return last_message.additional_kwargs['audio']['data']
-                return last_message.content
+            elif message["MsgType"] == 3 and self.image_output:  # 图片输出
+                if self.voice_output == "Native":
+                    output = last_message.additional_kwargs['audio']['transcript']
+                else:
+                    output = last_message.content
 
+                if output:
+                    await bot.send_at_message(from_wxid, "\n" + output, [sender_wxid])
+
+            elif message["MsgType"] == 34 and self.voice_output != "None":  # 语音输出
+                if self.voice_output == "Native":  # 原生支持
+                    if "audio" in last_message.additional_kwargs:
+                        await bot.send_voice_message(from_wxid,
+                                                     voice_base64=last_message.additional_kwargs['audio']['data'],
+                                                     format="wav")
+                    elif last_message.content:  # 无语音，有文本
+                        await bot.send_at_message(from_wxid, "\n" + last_message.content, [sender_wxid])
+                else:  # 非原生
+                    audio_byte = await self.get_voice_from_text(last_message.content)
+                    audio_base64 = bot.byte_to_base64(audio_byte)
+                    await bot.send_voice_message(from_wxid,
+                                                 voice_base64=audio_base64,
+                                                 format="wav")
             else:  # fallback
-                return last_message.content
+                await bot.send_at_message(from_wxid, "\n" + last_message.content, [sender_wxid])
+
+            # 检查是否有图片生成tool call
+            if last_message.additional_kwargs.get("tool_calls"):
+                for tool_call in last_message.additional_kwargs["tool_calls"]:
+                    if tool_call["function"]["name"] == "GenerateImage":
+                        await bot.send_at_message(from_wxid, f"\n🖼️正在生成图片...", [sender_wxid])
+                        try:
+                            prompt = json.loads(tool_call["function"]["arguments"])["prompt"]
+                            img_b64 = await self.generate_image(prompt)
+                            await bot.send_image_message(from_wxid, image_base64=img_b64)
+                        except Exception as e:
+                            logger.error(f"生成图片失败: {traceback.format_exc()}")
+                            await bot.send_at_message(from_wxid, f"\n生成图片失败: {str(e)}", [sender_wxid])
 
         except Exception as e:
             await bot.send_at_message(
@@ -353,6 +434,69 @@ class Ai(PluginBase):
                 [sender_wxid]
             )
             logger.error(traceback.format_exc())
+
+    async def generate_image(self, prompt: str) -> str:
+        client = AsyncOpenAI(
+            base_url=self.image_base_url,
+            api_key=self.image_api_key
+        )
+
+        try:
+            resp = await client.images.generate(
+                model=self.image_model_name,
+                prompt=prompt,
+                size=self.image_size,
+                n=1,
+                response_format="b64_json",
+                extra_body=self.image_additional_param
+            )
+            return resp.data[0].b64_json
+        except:
+            logger.error(traceback.format_exc())
+            raise
+
+    async def get_text_from_voice(self, user_input: bytes):
+        tempfile = io.BytesIO(user_input)
+        tempfile.name = "audio.wav"
+        client = AsyncOpenAI(
+            base_url=self.speech2text_base_url,
+            api_key=self.speech2text_api_key
+        )
+        try:
+            resp = await client.audio.transcriptions.create(
+                model=self.speech2text_model_name,
+                file=tempfile
+            )
+            return resp.text
+        except:
+            logger.error(traceback.format_exc())
+            raise
+
+    async def get_voice_from_text(self, text: str) -> bytes:
+        client = AsyncOpenAI(
+            base_url=self.text2speech_base_url,
+            api_key=self.text2speech_api_key
+        )
+        try:
+            resp = await client.audio.speech.create(
+                model=self.text2speech_model_name,
+                response_format="wav",
+                voice=self.text2speech_voice,
+                speed=float(self.text2speech_speed),
+                # extra_body=self.text2speech_additional_param,
+                input=text,
+            )
+            await resp.astream_to_file("resource/temp.wav")
+            return resp.content
+        except:
+            logger.error(traceback.format_exc())
+            raise
+
+    @staticmethod
+    def get_img_format(img_base64: str) -> str:
+        if ',' in img_base64:
+            img_base64 = img_base64.split(',')[1]
+        return imghdr.what(io.BytesIO(base64.b64decode(img_base64)))  # Python特有的用单行嵌套来加速性能
 
     async def delete_user_thread_id(self, bot: WechatAPIClient, message: dict):
         thread_id_dict = dict(self.db.get_llm_thread_id(message["SenderWxid"]))
@@ -382,18 +526,31 @@ class Ai(PluginBase):
         return
 
     async def delete_all_user_thread_id(self) -> bool:
+        logger.debug(self.db)
         self.db.delete_all_llm_thread_id()
 
         cursor = await self.sqlite_conn.cursor()
         try:
             await cursor.execute("DELETE FROM checkpoints")
             await cursor.execute("DELETE FROM writes")
-            await cursor.execute("VACUUM")
             await self.sqlite_conn.commit()
+
+            # 关闭当前连接
+            await cursor.close()
+            await self.sqlite_conn.close()
+
+            # 重新建立连接并执行 VACUUM
+            self.sqlite_conn = await aiosqlite.connect(self.ai_db_url)
+            cursor = await self.sqlite_conn.cursor()
+            await cursor.execute("VACUUM")
+
+            # 重新初始化 sqlite_saver
+            self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
+
         except Exception as e:
             logger.error(traceback.format_exc())
             return False
         finally:
-            cursor.close()
+            await cursor.close()
 
         return True
