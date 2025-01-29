@@ -220,33 +220,34 @@ class Ai(PluginBase):
         elif command[0] in self.other_command:
             return
 
-        if "清除历史记录" in message["Content"] or "清除记录" in message["Content"]:
-            return await self.delete_user_thread_id(bot, message)
-        elif "清除所有人历史记录" in message["Content"] or "清除所有历史记录" in message["Content"] or "清除所有记录" in \
-                message["Content"]:
-            if message["SenderWxid"] not in self.admins:
-                await bot.send_at_message(
-                    message["FromWxid"],
-                    f"\n-----XYBot-----\n😠你没有这样做的权限！",
-                    [message["SenderWxid"]]
-                )
+        for c in ["清除历史记录", "清除记录", "清除历史", "清除对话"]:
+            if c in message["Content"]:
+                return await self.delete_user_thread_id(bot, message)
+        for c in ["清除所有人历史记录", "清除所有历史记录", "清除所有记录", "清除所有人记录", "清除所有人对话"]:
+            if c in message["Content"]:
+                if message["SenderWxid"] not in self.admins:
+                    await bot.send_at_message(
+                        message["FromWxid"],
+                        f"\n-----XYBot-----\n😠你没有这样做的权限！",
+                        [message["SenderWxid"]]
+                    )
+                    return
+
+                result = await self.delete_all_user_thread_id()
+                if result:
+                    await bot.send_at_message(
+                        message["FromWxid"],
+                        f"\n-----XYBot-----\n🗑️清除成功✅",
+                        [message["SenderWxid"]]
+                    )
+                else:
+                    await bot.send_at_message(
+                        message["FromWxid"],
+                        f"\n-----XYBot-----\n清除失败，请查看日志",
+                        [message["SenderWxid"]]
+                    )
+
                 return
-
-            result = await self.delete_all_user_thread_id()
-            if result:
-                await bot.send_at_message(
-                    message["FromWxid"],
-                    f"\n-----XYBot-----\n🗑️清除成功✅",
-                    [message["SenderWxid"]]
-                )
-            else:
-                await bot.send_at_message(
-                    message["FromWxid"],
-                    f"\n-----XYBot-----\n清除失败，请查看日志",
-                    [message["SenderWxid"]]
-                )
-
-            return
 
         if message["IsGroup"]:
             message["Content"] = content[len(command[0]):].strip()
@@ -298,7 +299,7 @@ class Ai(PluginBase):
         await self.get_ai_response(bot, message)
 
     @schedule('cron', hour=5)
-    async def reset_chat_history(self, bot: WechatAPIClient):
+    async def reset_chat_history(self):
         await self.async_init()
 
         r = await self.delete_all_user_thread_id()
@@ -486,7 +487,6 @@ class Ai(PluginBase):
                 # extra_body=self.text2speech_additional_param,
                 input=text,
             )
-            await resp.astream_to_file("resource/temp.wav")
             return resp.content
         except:
             logger.error(traceback.format_exc())
