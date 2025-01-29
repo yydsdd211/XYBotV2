@@ -1,5 +1,8 @@
+import asyncio
 import datetime
 import tomllib
+from asyncio import Queue, create_task
+from functools import wraps
 from typing import Union
 
 from loguru import logger
@@ -48,9 +51,49 @@ class BotDatabase(metaclass=Singleton):
         Base.metadata.create_all(self.engine)
         logger.success("数据库初始化成功")
 
+        # 创建积分操作队列
+        self._points_queue = Queue()
+        self._queue_task = None
+        self._start_queue_worker()
+
+    def _start_queue_worker(self):
+        """启动队列处理器"""
+
+        async def worker():
+            while True:
+                func, args, kwargs, future = await self._points_queue.get()
+                try:
+                    result = func(*args, **kwargs)
+                    future.set_result(result)
+                except Exception as e:
+                    future.set_exception(e)
+                finally:
+                    self._points_queue.task_done()
+
+        loop = asyncio.get_event_loop()
+        self._queue_task = create_task(worker())
+
+    def _queue_operation(self, func):
+        """装饰器：将操作加入队列"""
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            future = asyncio.Future()
+            asyncio.get_event_loop().call_soon_threadsafe(
+                self._points_queue.put_nowait,
+                (func.__get__(self, BotDatabase), args, kwargs, future)
+            )
+            return asyncio.get_event_loop().run_until_complete(future)
+
+        return wrapper
+
     # USER
 
     def add_points(self, wxid: str, num: int) -> bool:
+        """Thread-safe point addition"""
+        return self._queue_operation(self._add_points)(wxid, num)
+
+    def _add_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point addition"""
         session = self.DBSession()
         try:
@@ -76,6 +119,10 @@ class BotDatabase(metaclass=Singleton):
 
     def set_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point setting"""
+        return self._queue_operation(self._set_points)(wxid, num)
+
+    def _set_points(self, wxid: str, num: int) -> bool:
+        """Thread-safe point setting"""
         session = self.DBSession()
         try:
             result = session.execute(
@@ -98,6 +145,10 @@ class BotDatabase(metaclass=Singleton):
 
     def get_points(self, wxid: str) -> int:
         """Get user points"""
+        return self._queue_operation(self._get_points)(wxid)
+
+    def _get_points(self, wxid: str) -> int:
+        """Get user points"""
         session = self.DBSession()
         try:
             user = session.query(User).filter_by(wxid=wxid).first()
@@ -107,9 +158,11 @@ class BotDatabase(metaclass=Singleton):
 
     def get_signin_stat(self, wxid: str) -> datetime.datetime:
         """Thread-safe get user's last login time"""
+        return self._queue_operation(self._get_signin_stat)(wxid)
+
+    def _get_signin_stat(self, wxid: str) -> datetime.datetime:
         session = self.DBSession()
         try:
-            # Use SELECT FOR UPDATE to prevent concurrent modifications
             user = session.query(User).filter_by(wxid=wxid) \
                 .with_for_update().first()
             return user.signin_stat if user else datetime.datetime.fromtimestamp(0)
@@ -118,9 +171,11 @@ class BotDatabase(metaclass=Singleton):
 
     def set_signin_stat(self, wxid: str, signin_time: datetime.datetime) -> bool:
         """Thread-safe set user's signin time"""
+        return self._queue_operation(self._set_signin_stat)(wxid, signin_time)
+
+    def _set_signin_stat(self, wxid: str, signin_time: datetime.datetime) -> bool:
         session = self.DBSession()
         try:
-            # Use atomic UPDATE operation
             result = session.execute(
                 update(User)
                 .where(User.wxid == wxid)
@@ -130,7 +185,6 @@ class BotDatabase(metaclass=Singleton):
                 )
             )
             if result.rowcount == 0:
-                # User doesn't exist, create new
                 user = User(
                     wxid=wxid,
                     signin_stat=signin_time,
@@ -208,6 +262,10 @@ class BotDatabase(metaclass=Singleton):
             session.close()
 
     def safe_trade_points(self, trader_wxid: str, target_wxid: str, num: int) -> bool:
+        """Thread-safe points trading between users"""
+        return self._queue_operation(self._safe_trade_points)(trader_wxid, target_wxid, num)
+
+    def _safe_trade_points(self, trader_wxid: str, target_wxid: str, num: int) -> bool:
         """Thread-safe points trading between users"""
         session = self.DBSession()
         try:
@@ -325,9 +383,11 @@ class BotDatabase(metaclass=Singleton):
         finally:
             session.close()
 
-
     def get_signin_streak(self, wxid: str) -> int:
-        """获取用户连续签到天数"""
+        """Thread-safe get user's signin streak"""
+        return self._queue_operation(self._get_signin_streak)(wxid)
+
+    def _get_signin_streak(self, wxid: str) -> int:
         session = self.DBSession()
         try:
             user = session.query(User).filter_by(wxid=wxid).first()
@@ -336,7 +396,10 @@ class BotDatabase(metaclass=Singleton):
             session.close()
 
     def set_signin_streak(self, wxid: str, streak: int) -> bool:
-        """设置用户连续签到天数"""
+        """Thread-safe set user's signin streak"""
+        return self._queue_operation(self._set_signin_streak)(wxid, streak)
+
+    def _set_signin_streak(self, wxid: str, streak: int) -> bool:
         session = self.DBSession()
         try:
             result = session.execute(

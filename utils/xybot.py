@@ -1,3 +1,4 @@
+import tomllib
 import xml.etree.ElementTree as ET
 from typing import Dict, Any
 
@@ -15,6 +16,13 @@ class XYBot:
         self.nickname = None
         self.alias = None
         self.phone = None
+
+        with open("main_config.toml", "rb") as f:
+            main_config = tomllib.load(f)
+
+        self.ignore_mode = main_config.get("XYBot", {}).get("ignore-mode", "")
+        self.whitelist = main_config.get("XYBot", {}).get("whitelist", [])
+        self.blacklist = main_config.get("XYBot", {}).get("blacklist", [])
 
     def update_profile(self, wxid: str, nickname: str, alias: str, phone: str):
         """更新机器人信息"""
@@ -105,11 +113,14 @@ class XYBot:
 
         if self.wxid in ats:
             logger.info("收到被@消息: {}", message)
-            await EventManager.emit("at_message", self.bot, message)
+            if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+                await EventManager.emit("at_message", self.bot, message)
             return
 
         logger.info("收到文本消息: {}", message)
-        await EventManager.emit("text_message", self.bot, message)
+
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("text_message", self.bot, message)
 
     async def process_image_message(self, message: Dict[str, Any]):
         """处理图片消息"""
@@ -149,7 +160,8 @@ class XYBot:
         if aeskey and cdnmidimgurl:
             message["Content"] = await self.bot.download_image(aeskey, cdnmidimgurl)
 
-        await EventManager.emit("image_message", self.bot, message)
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("image_message", self.bot, message)
 
     async def process_voice_message(self, message: Dict[str, Any]):
         """处理语音消息"""
@@ -194,7 +206,8 @@ class XYBot:
             silk_base64 = message["ImgBuf"]["buffer"]
             message["Content"] = await self.bot.silk_base64_to_wav_byte(silk_base64)
 
-        await EventManager.emit("voice_message", self.bot, message)
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("voice_message", self.bot, message)
 
     async def process_xml_message(self, message: Dict[str, Any]):
         """处理xml消息"""
@@ -228,8 +241,6 @@ class XYBot:
             await self.process_file_message(message)
         elif type == 74:  # 文件消息，但还在上传，不用管
             pass
-
-
 
         else:
             logger.info("未知的xml消息类型: {}", message)
@@ -327,7 +338,8 @@ class XYBot:
         message["Content"] = text
         message["Quote"] = quote_messsage
 
-        await EventManager.emit("quote_message", self.bot, message)
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("quote_message", self.bot, message)
 
     async def process_video_message(self, message):
         # 预处理消息
@@ -351,7 +363,9 @@ class XYBot:
         logger.info("收到视频消息: {}", message)
 
         message["Video"] = await self.bot.download_video(message["MsgId"])
-        await EventManager.emit("video_message", self.bot, message)
+
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("video_message", self.bot, message)
 
     async def process_file_message(self, message: Dict[str, Any]):
         """处理文件消息"""
@@ -371,7 +385,8 @@ class XYBot:
 
         message["File"] = await self.bot.download_attach(attach_id)
 
-        await EventManager.emit("file_message", self.bot, message)
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("file_message", self.bot, message)
 
     async def process_system_message(self, message: Dict[str, Any]):
         """处理系统消息"""
@@ -425,4 +440,13 @@ class XYBot:
 
         logger.info("收到拍一拍消息: {}", message)
 
-        await EventManager.emit("pat_message", self.bot, message)
+        if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+            await EventManager.emit("pat_message", self.bot, message)
+
+    def ignore_check(self, FromWxid: str, SenderWxid: str):
+        if self.ignore_mode == "Whitelist":
+            return (FromWxid in self.whitelist) or (SenderWxid in self.whitelist)
+        elif self.ignore_mode == "blacklist":
+            return (FromWxid not in self.blacklist) and (SenderWxid not in self.blacklist)
+        else:
+            return True

@@ -6,7 +6,6 @@ import tomllib
 import traceback
 from pathlib import Path
 
-import websockets
 from loguru import logger
 
 import WechatAPI
@@ -27,105 +26,6 @@ async def handle_message(xybot, msg):
         logger.error(traceback.format_exc())
 
 
-async def process_websocket_messages(ws, xybot):
-    """处理WebSocket接收到的消息"""
-    try:
-        # 增加接收超时时间
-        recv = await asyncio.wait_for(
-            ws.recv(),
-            timeout=90  # 增加到90秒
-        )
-
-        try:
-            message = json.loads(recv)
-            msg_list = message.get("Data", [])
-
-            if not msg_list:
-                return
-
-            for msg in msg_list:
-                asyncio.create_task(handle_message(xybot, msg))
-
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON解析错误: {e}, 原始消息: {recv}")
-            return
-
-    except asyncio.TimeoutError:
-        logger.debug("接收消息超时，发送心跳包...")
-        try:
-            await asyncio.wait_for(ws.ping(), timeout=5)  # 减少到5秒
-            # logger.debug("心跳包发送成功")
-        except Exception as e:
-            logger.error(f"心跳包发送失败: {e}")
-            raise  # 重新抛出异常以触发重连
-        return
-
-    except websockets.exceptions.ConnectionClosed as e:
-        logger.warning(f"WebSocket连接已断开 (code: {e.code}, reason: {e.reason})")
-        raise
-
-    except Exception as e:
-        logger.error(f"处理消息时发生错误: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise  # 重新抛出异常以触发重连
-
-
-async def websocket_client_loop(bot, ws_port, xybot):
-    """WebSocket客户端主循环"""
-    while True:
-        try:
-            # 建立WebSocket连接
-            ws = await bot.connect_websocket(ws_port)
-            logger.success("已连接到WechatAPI WebSocket，开始接受消息")
-
-            # 设置pong处理器
-            ws.pong_handler = lambda _: logger.debug("收到服务器pong响应")
-
-            # 启动心跳任务
-            ping_task = asyncio.create_task(keep_alive(ws))
-
-            try:
-                # 消息处理循环
-                while True:
-                    if ws.state != websockets.protocol.State.OPEN:
-                        logger.warning("WebSocket连接已断开，准备重连...")
-                        break
-                    await process_websocket_messages(ws, xybot)
-            finally:
-                ping_task.cancel()
-                if ws.state == websockets.protocol.State.OPEN:
-                    try:
-                        await ws.close()
-                    except:
-                        pass
-
-        except Exception as e:
-            logger.error(f"WebSocket连接发生错误: {str(e)}")
-            await asyncio.sleep(5)  # 固定5秒后重连
-            logger.info("尝试重新连接WebSocket...")
-
-
-async def keep_alive(websocket):
-    """保持WebSocket连接的心跳函数"""
-    try:
-        while True:
-            await asyncio.sleep(30)  # 每30秒发送一次ping
-            try:
-                # 减少ping超时时间
-                await asyncio.wait_for(
-                    websocket.ping(),
-                    timeout=5  # 减少到5秒
-                )
-                logger.debug("心跳包发送成功")
-            except asyncio.TimeoutError:
-                logger.warning("心跳包发送超时")
-                break
-            except Exception as e:
-                logger.warning(f"心跳包发送失败: {str(e)}")
-                break
-    except asyncio.CancelledError:
-        pass
-
 async def bot_core():
     # 设置工作目录
     script_dir = Path(__file__).resolve().parent
@@ -139,13 +39,9 @@ async def bot_core():
 
     # 启动WechatAPI服务
     server = WechatAPI.WechatAPIServer()
-
     api_config = main_config.get("WechatAPIServer", {})
-
     redis_host = os.getenv("REDIS_HOST", api_config.get("redis-host"))
-
     logger.debug("最终使用的 Redis 主机地址: {}", redis_host)
-
     server.start(port=api_config.get("port", 9000),
                  mode=api_config.get("mode", "release"),
                  redis_host=redis_host,
