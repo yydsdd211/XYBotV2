@@ -18,6 +18,12 @@ timezone = "Asia/Shanghai"
 # 试验新功能：如果main_config.toml配置改动，或者plugins文件夹有改动，自动重启。可以在开发时使用，不建议在生产环境使用。
 auto-restart = false
 
+# 屏蔽设置
+ignore-mode = "Whitelist" # 可为 "None"，"Whitelist"，"Blacklist
+whitelist = ["wxid_1", "wxid_2", "chatroom@111", "chatroom@222"]
+blacklist = ["wxid_3", "wxid_4", "chatroom@333", "chatroom@444"]
+
+
 [OpenAI]
 api-key = "sk-xxxx"
 base-url = "https://api.openai.com/v1"
