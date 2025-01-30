@@ -82,7 +82,7 @@ class SignIn(PluginBase):
             output += f"你连续签到了 {streak} 天！"
 
         if streak_points > 0:
-            output += f" 奖励 {streak_points} 积分！"
+            output += f" 再奖励 {streak_points} 积分！"
 
         if streak > 1:
             output += "[爱心]"
