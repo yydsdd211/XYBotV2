@@ -1,10 +1,10 @@
-# XYBot V2
+# 🤖 XYBot V2
 
 XYBot V2 是一个功能丰富的微信机器人框架,支持多种互动功能和游戏玩法。
 
-## 主要功能
+## ✨ 主要功能
 
-### 基础功能
+### 🛠️ 基础功能
 
 - 🤖 AI聊天 - 支持文字、图片、语音等多模态交互
 - 📰 每日新闻 - 自动推送每日新闻
@@ -12,50 +12,50 @@ XYBot V2 是一个功能丰富的微信机器人框架,支持多种互动功能�
 - 🌤️ 天气查询 - 查询全国各地天气
 - 🎮 游戏功能 - 五子棋、战争雷霆玩家查询等
 
-### 积分系统
+### 💎 积分系统
 
 - 📝 每日签到 - 支持连续签到奖励
 - 🎲 抽奖系统 - 多种抽奖玩法
 - 🧧 红包系统 - 群内发积分红包
 - 💰 积分交易 - 用户间积分转账
-- 📊 积分排行 - 查看积分排名
+- �� 积分排行 - 查看积分排名
 
-### 管理功能
+### 👮 管理功能
 
 - ⚙️ 插件管理 - 动态加载/卸载插件
 - 👥 白名单管理 - 控制机器人使用权限
 - 📊 积分管理 - 管理员可调整用户积分
 - 🔄 签到重置 - 重置所有用户签到状态
 
-## 插件系统
+## 🔌 插件系统
 
 XYBot V2 采用插件化设计,所有功能都以插件形式实现。主要插件包括:
 
-- AdminPoint - 积分管理
-- AdminSignInReset - 签到重置
-- AdminWhitelist - 白名单管理
-- Ai - AI聊天
-- BotStatus - 机器人状态
-- GetContact - 获取通讯录
-- GetWeather - 天气查询
-- Gomoku - 五子棋游戏
-- GoodMorning - 早安问候
-- Leaderboard - 积分排行
-- LuckyDraw - 幸运抽奖
-- Menu - 菜单系统
-- Music - 点歌系统
-- News - 新闻推送
-- PointTrade - 积分交易
-- QueryPoint - 积分查询
-- RandomMember - 随机群成员
-- RandomPicture - 随机图片
-- RedPacket - 红包系统
-- SignIn - 每日签到
-- Warthunder - 战争雷霆查询
+- 👨‍💼 AdminPoint - 积分管理
+- 🔄 AdminSignInReset - 签到重置
+- 🛡️ AdminWhitelist - 白名单管理
+- 🤖 Ai - AI聊天
+- 📊 BotStatus - 机器人状态
+- 📱 GetContact - 获取通讯录
+- 🌤️ GetWeather - 天气查询
+- 🎮 Gomoku - 五子棋游戏
+- 🌅 GoodMorning - 早安问候
+- 📈 Leaderboard - 积分排行
+- 🎲 LuckyDraw - 幸运抽奖
+- 📋 Menu - 菜单系统
+- 🎵 Music - 点歌系统
+- 📰 News - 新闻推送
+- 💱 PointTrade - 积分交易
+- 💰 QueryPoint - 积分查询
+- 🎯 RandomMember - 随机群成员
+- 🖼️ RandomPicture - 随机图片
+- 🧧 RedPacket - 红包系统
+- ✍️ SignIn - 每日签到
+- ✈️ Warthunder - 战争雷霆查询
 
-## 开发说明
+## 📖 开发说明
 
-### 插件开发
+### 🧩 插件开发
 
 所有插件需继承 `PluginBase` 类,实现相应的处理方法。示例:
 
@@ -124,18 +124,18 @@ class ExamplePlugin(PluginBase):
         logger.info("我在2025年1月29日执行")
 ```
 
-## 部署说明
+## 🚀 部署说明
 
-### Docker 部署（推荐）
+### 🐳 Docker 部署（推荐）
 
-1. 准备环境
+1. 🔧 准备环境
 
 需要安装 Docker 和 Docker Compose:
 
-- Docker 安装: https://docs.docker.com/get-started/get-docker/
-- Docker Compose 安装: https://docs.docker.com/compose/install/
+- 🐋 Docker 安装: https://docs.docker.com/get-started/get-docker/
+- 🔄 Docker Compose 安装: https://docs.docker.com/compose/install/
 
-2. 拉取最新镜像
+2. ⬇️ 拉取最新镜像
 
 ```bash
 # 克隆项目
@@ -146,7 +146,7 @@ cd XYBotV2
 docker-compose pull
 ```
 
-3. 启动容器
+3. 🚀 启动容器
 
 ```bash
 # 首次启动
@@ -156,7 +156,7 @@ docker-compose up -d
 docker-compose ps
 ```
 
-4. 查看日志然后登录微信
+4. 📱 查看日志然后登录微信
 
 ```bash
 # 查看日志获取登录二维码
@@ -165,7 +165,7 @@ docker-compose logs -f xybotv2
 
 扫描终端显示的二维码完成登录。（如果扫不出来,可以打开链接扫码）。首次登录成功后,需要挂机4小时。之后机器人就会自动开始正常运行。
 
-5. 配置文件修改
+5. ⚙️ 配置文件修改
 
 ```bash
 # 查看数据卷位置
@@ -182,21 +182,21 @@ xybotv2-volumes-dir/_data/plugins/all_in_one_config.toml
 docker-compose restart xybotv2
 ```
 
-! 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
+> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
 
-#### 常见问题
+#### ❓ 常见问题
 
-1. Redis 连接失败
+1. 🔌 Redis 连接失败
 
 - 检查 DragonFly 服务是否正常运行
 - 确认 main_config.toml 中的 redis-host 配置是否正确
 
-2. 配置文件修改未生效
+2. ⚠️ 配置文件修改未生效
 
 - 重启容器: `docker-compose restart xybotv2`
 - 检查配置文件权限是否正确
 
-3. 日志查看
+3. 📝 日志查看
 
 ```bash
 # 查看实时日志
@@ -206,11 +206,11 @@ docker-compose logs -f xybotv2
 docker-compose logs --tail=100 xybotv2
 ```
 
-### 直接部署
+### 💻 直接部署
 
-#### Windows 部署步骤
+#### 🪟 Windows 部署步骤
 
-1. 环境准备
+1. 🔧 环境准备
 
 - 安装 Python 3.11 (必须是3.11版本): https://www.python.org/downloads/release/python-31111/
     - 在安装过程中勾选 "Add Python to PATH" 选项
@@ -238,8 +238,7 @@ docker-compose logs --tail=100 xybotv2
       # 如果返回PONG则表示Redis已成功运行
       ```
 
-
-2. 下载项目
+2. ⬇️ 下载项目
 
 ```bash
 # 克隆项目
@@ -259,7 +258,7 @@ pip install -r requirements.txt
 pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
 
-3. 启动机器人
+3. 🚀 启动机器人
 
 ```bash
 # 确保Redis服务已启动
@@ -269,12 +268,12 @@ redis-cli ping  # 如果返回PONG则表示Redis正常运行
 python main.py
 ```
 
-4. 登录微信
+4. 📱 登录微信
 
 - 扫描终端显示的二维码完成登录。如果扫不出来,可以打开二维码下面的链接扫码。
 - 首次登录成功后,需要挂机4小时。之后机器人就会开始正常运行。
 
-5. 配置文件修改
+5. ⚙️ 配置文件修改
 
 主配置: main_config.toml 主配置文件
 
@@ -282,8 +281,8 @@ python main.py
 
 这几个插件需要配置API密钥才可正常工作:
 
-- Ai
-- GetWeather
+- 🤖 Ai
+- 🌤️ GetWeather
 
 
 - 如果机器人正在运行，需要重启才能使主配置生效：
@@ -293,11 +292,11 @@ python main.py
     python main.py
     ```
 
-! 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
+> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
 
-#### Linux 部署步骤
+#### 🐧 Linux 部署步骤
 
-1. 环境准备
+1. 🔧 环境准备
 
 ```bash
 # Ubuntu/Debian
@@ -310,7 +309,7 @@ sudo systemctl start redis
 sudo systemctl enable redis
 ```
 
-2. 下载项目
+2. ⬇️ 下载项目
 
 ```bash
 # 克隆项目
@@ -330,7 +329,7 @@ pip install -r requirements.txt
 pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
 
-4. 启动机器人
+4. 🚀 启动机器人
 
 ```bash
 # 确保在虚拟环境中
@@ -353,12 +352,12 @@ redis-cli ping
 python3 main.py
 ```
 
-5. 登录微信
+5. 📱 登录微信
 
 - 扫描终端显示的二维码完成登录。如果扫不出来,可以打开二维码下面的链接扫码。
 - 首次登录成功后,需要挂机4小时。之后机器人就会开始正常运行。
 
-6. 配置文件修改
+6. ⚙️ 配置文件修改
 
 主配置: main_config.toml 主配置文件
 
@@ -366,8 +365,8 @@ python3 main.py
 
 这几个插件需要配置API密钥才可正常工作:
 
-- Ai
-- GetWeather
+- 🤖 Ai
+- 🌤️ GetWeather
 
 - 如果机器人正在运行，需要重启才能使主配置生效：
     ```bash
@@ -376,4 +375,4 @@ python3 main.py
     python main.py
     ```
 
-! 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
+> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
