@@ -9,6 +9,19 @@ enable-private = true # 是否处理私聊消息？
 
 command = ["清除历史记录", "清除记录", "清除历史", "清除对话", "清除所有人历史记录", "清除所有历史记录", "清除所有记录", "清除所有人记录", "清除所有人对话", "AI", "ai", "gpt", "GPT", "Gpt", "聊天", "ChatGPT", "chatgpt"]
 
+[Ai.Point]
+mode = "None" # 扣除积分模式可选："None"不扣积分 "Together"一个请求统一扣除x点积分
+
+# Together模式设置
+price = 5
+
+# 管理员是否忽略扣除积分？
+admin-ignore = true
+
+# 白名单是否忽略扣除积分？
+whitelist-ignore = true
+
+
 [Ai.MainModel]
 # 重要：接口需要是OpenAI API格式
 base-url = ""   # 会覆盖来自主设置的设置。不设置则会从主设置读取。

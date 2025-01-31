@@ -107,6 +107,18 @@ class Ai(PluginBase):
 
         self.model_kwargs["modalities"] = modalities
 
+        # 读取[Ai.Point]设置
+        config = plugin_config["Ai"]["Point"]
+        self.point_mode = config["mode"]
+
+        if self.point_mode not in ["None", "Together"]:
+            logger.error("AI插件设置错误：point-mode 必须为 None 或者 Together")
+
+        self.together_price = config["price"]
+
+        self.admin_ignore = config["admin-ignore"]
+        self.whitelist_ignore = config["whitelist-ignore"]
+
         # 读取 [Ai.GenerateImage] 设置
         config = plugin_config["Ai"]["GenerateImage"]
         self.image_base_url = config["base-url"] if config["base-url"] else openai_config["base-url"]
@@ -252,7 +264,8 @@ class Ai(PluginBase):
         if message["IsGroup"]:
             message["Content"] = content[len(command[0]):].strip()
 
-        await self.get_ai_response(bot, message)
+        if self.check_point(bot, message):
+            await self.get_ai_response(bot, message)
 
     @on_at_message
     async def handle_at(self, bot: WechatAPIClient, message: dict):
@@ -266,7 +279,8 @@ class Ai(PluginBase):
 
         message["Content"] = str(message["Content"]).replace(f"@{bot.nickname}\u2005", "").strip()
 
-        await self.get_ai_response(bot, message)
+        if self.check_point(bot, message):
+            await self.get_ai_response(bot, message)
 
     @on_voice_message
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
@@ -281,7 +295,8 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        await self.get_ai_response(bot, message)
+        if self.check_point(bot, message):
+            await self.get_ai_response(bot, message)
 
     @on_image_message
     async def handle_image(self, bot: WechatAPIClient, message: dict):
@@ -296,7 +311,8 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        await self.get_ai_response(bot, message)
+        if self.check_point(bot, message):
+            await self.get_ai_response(bot, message)
 
     @schedule('cron', hour=5)
     async def reset_chat_history(self):
@@ -554,3 +570,28 @@ class Ai(PluginBase):
             await cursor.close()
 
         return True
+
+    async def check_point(self, bot: WechatAPIClient, message: dict) -> bool:
+        wxid = message["SenderWxid"]
+
+        if self.point_mode == "None":
+            return True
+
+        elif self.point_mode == "Together":
+            if wxid in self.admins and self.admin_ignore:
+                return True
+            elif self.db.get_whitelist(wxid) and self.whitelist_ignore:
+                return True
+            else:
+                if self.db.get_points(wxid) < self.together_price:
+                    await bot.send_at_message(message["FromWxid"],
+                                              f"\n-----XYBot-----\n"
+                                              f"😭你的积分不够啦！需要 {self.together_price} 积分",
+                                              [wxid])
+                    return False
+
+                self.db.add_points(wxid, -self.together_price)
+                return True
+
+        else:
+            return True
