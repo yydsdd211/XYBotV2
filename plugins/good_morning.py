@@ -1,9 +1,9 @@
 import asyncio
+import tomllib
 from datetime import datetime
 from random import randint
 
 import aiohttp
-from tomlkit import parse
 
 from WechatAPI import WechatAPIClient
 from utils.decorators import *
@@ -18,8 +18,8 @@ class GoodMorning(PluginBase):
     def __init__(self):
         super().__init__()
 
-        with open("plugins/all_in_one_config.toml", "r") as f:
-            plugin_config = parse(f.read())
+        with open("plugins/all_in_one_config.toml", "rb") as f:
+            plugin_config = tomllib.load(f)
 
         config = plugin_config["News"]
 
