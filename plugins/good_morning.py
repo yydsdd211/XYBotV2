@@ -21,9 +21,9 @@ class GoodMorning(PluginBase):
         with open("plugins/all_in_one_config.toml", "rb") as f:
             plugin_config = tomllib.load(f)
 
-        config = plugin_config["News"]
+        config = plugin_config["GoodMorning"]
 
-        self.enable = config["GoodMorning"]
+        self.enable = config["enable"]
 
     @schedule('cron', hour=8, minute=30)
     async def daily_task(self, bot: WechatAPIClient):
