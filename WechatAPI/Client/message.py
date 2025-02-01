@@ -182,14 +182,23 @@ class MessageMixin(WechatAPIClientBase):
 
     async def send_video_message(self, wxid: str, video_base64: str = "", image_base64: str = "", video_path: str = "",
                                  image_path: str = "") -> tuple[int, int]:
-        """
-        发送视频消息
-        :param wxid: 接受人
-        :param video_base64: 与video_path二选一
-        :param image_base64: 与image_path二选一
-        :param video_path: 与video_base64二选一
-        :param image_path: 与image_base64二选一
-        :return: int, int (int: ClientMsgid, int: NewMsgId)
+        """发送视频消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            video_base64 (str, optional): 视频base64编码，与video_path二选一. Defaults to "".
+            image_base64 (str, optional): 视频封面图片base64编码，与image_path二选一. Defaults to "".
+            video_path (str, optional): 视频文件路径，与video_base64二选一. Defaults to "".
+            image_path (str, optional): 视频封面图片路径，与image_base64二选一. Defaults to "".
+
+        Returns:
+            tuple[int, int]: 返回(ClientMsgid, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            ValueError: 视频或图片参数都为空或都不为空时
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_video_message, wxid, video_base64, image_base64, video_path,
                                          image_path)

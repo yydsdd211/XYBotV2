@@ -5,7 +5,7 @@ from WechatAPI.errors import *
 
 @dataclass
 class Proxy:
-    """代理配置类
+    """代理(无效果，别用！)
 
     Args:
         ip (str): 代理服务器IP地址

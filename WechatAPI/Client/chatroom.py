@@ -40,7 +40,7 @@ class ChatroomMixin(WechatAPIClientBase):
             chatroom: 群聊id
 
         Returns:
-            dict: dict of chatroom info
+            dict: 群聊信息字典
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -64,7 +64,7 @@ class ChatroomMixin(WechatAPIClientBase):
             chatroom: 群聊id
 
         Returns:
-            dict: dict of chatroom info
+            dict: 群聊信息字典
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -88,7 +88,7 @@ class ChatroomMixin(WechatAPIClientBase):
             chatroom: 群聊id
 
         Returns:
-            list[dict]: list of chatroom member
+            list[dict]: 群聊成员列表
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")

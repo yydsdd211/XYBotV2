@@ -29,7 +29,7 @@ class Singleton(type):
 
 
 class Protect(metaclass=Singleton):
-    """保护类，用于管理登录状态。
+    """保护类，风控保护机制。
 
     使用单例模式确保全局只有一个实例。
 
@@ -63,7 +63,7 @@ class Protect(metaclass=Singleton):
         self.login_device_id = self.login_stat.get("device_id", "")
 
     def check(self, second: int) -> bool:
-        """检查是否在指定时间内。
+        """检查是否在指定时间内，风控保护。
 
         Args:
             second (int): 指定的秒数
