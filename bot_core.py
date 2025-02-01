@@ -9,6 +9,7 @@ from pathlib import Path
 from loguru import logger
 
 import WechatAPI
+from WechatAPI import is_running_in_docker
 from WechatAPI.errors import BanProtection
 from database.database import BotDatabase
 from utils.decorators import scheduler
@@ -50,7 +51,12 @@ async def bot_core():
                  redis_db=api_config.get("redis-db", 0))
 
     # 实例化WechatAPI客户端
-    bot = WechatAPI.WechatAPIClient("localhost", api_config.get("port", 9000))
+    if is_running_in_docker():  # 傻逼DNS
+        ip = "localhost"
+    else:
+        ip = "127.0.0.1"
+
+    bot = WechatAPI.WechatAPIClient(ip, api_config.get("port", 9000))
     bot.ignore_protect = main_config.get("XYBot", {}).get("ignore-protection", False)
 
     # 等待WechatAPI服务启动

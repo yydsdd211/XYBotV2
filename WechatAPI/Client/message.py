@@ -474,7 +474,7 @@ class MessageMixin(WechatAPIClientBase):
         """
         return await self._queue_message(self._send_cdn_video_msg, wxid, wxid, xml)
 
-    async def _send_cdn_video_msg(self, wxid: str, xml: str) -> tuple[int, int, int]:
+    async def _send_cdn_video_msg(self, wxid: str, xml: str) -> tuple[int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):

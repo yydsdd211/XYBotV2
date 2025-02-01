@@ -52,19 +52,34 @@ class WechatAPIServer:
         self.process = subprocess.Popen(command, cwd=os.path.dirname(os.path.abspath(__file__)), stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
         self.log_process = threading.Thread(target=self.process_stdout_to_log, daemon=True)
+        self.error_log_process = threading.Thread(target=self.process_stderr_to_log, daemon=True)
         self.log_process.start()
+        self.error_log_process.start()
 
     def stop(self):
-        self.process.terminate()
-        self.log_process.join()
+        if self.process:
+            self.process.terminate()
+            self.log_process.join()
+            self.error_log_process.join()
 
     def process_stdout_to_log(self):
         while True:
             line = self.process.stdout.readline()
             if not line:
                 break
-
             logger.log("API", line.decode("utf-8").strip())
+
+        # 检查进程是否异常退出
+        return_code = self.process.poll()
+        if return_code is not None and return_code != 0:
+            logger.error("WechatAPI服务器异常退出，退出码: {}", return_code)
+
+    def process_stderr_to_log(self):
+        while True:
+            line = self.process.stderr.readline()
+            if not line:
+                break
+            logger.info(line.decode("utf-8").strip())
 
 
 def is_running_in_docker():
@@ -76,6 +91,5 @@ def is_running_in_docker():
             is_docker = 'docker' in content or 'kubepods' in content
             logger.debug("Docker 检测结果: {}, cgroup 内容: {}", is_docker, content)
             return is_docker
-    except Exception as e:
-        logger.debug("Docker 检测异常: {}", str(e))
+    except:
         return False
