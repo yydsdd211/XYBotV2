@@ -13,9 +13,10 @@ from ..errors import *
 
 class LoginMixin(WechatAPIClientBase):
     async def is_running(self) -> bool:
-        """
-        检查WechatAPI是否在运行
-        :return:
+        """检查WechatAPI是否在运行。
+
+        Returns:
+            bool: 如果WechatAPI正在运行返回True，否则返回False。
         """
         try:
             async with aiohttp.ClientSession() as session:
@@ -26,13 +27,19 @@ class LoginMixin(WechatAPIClientBase):
 
     async def get_qr_code(self, device_name: str, device_id: str = "", proxy: Proxy = None, print_qr: bool = False) -> (
             str, str):
-        """
-        获取登录二维码
-        :param device_name:
-        :param device_id:
-        :param proxy: A Proxy dataclass object
-        :param print_qr: bool, whether print QR code to console
-        :return: str Login QR code UUID
+        """获取登录二维码。
+
+        Args:
+            device_name (str): 设备名称
+            device_id (str, optional): 设备ID. Defaults to "".
+            proxy (Proxy, optional): 代理信息. Defaults to None.
+            print_qr (bool, optional): 是否在控制台打印二维码. Defaults to False.
+
+        Returns:
+            tuple[str, str]: 返回登录二维码的UUID和URL
+
+        Raises:
+            根据error_handler处理错误
         """
         async with aiohttp.ClientSession() as session:
             json_param = {'DeviceName': device_name, 'DeviceID': device_id}
@@ -62,11 +69,17 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def check_login_uuid(self, uuid: str, device_id: str = "") -> tuple[bool, Union[dict, int]]:
-        """
-        检查登录的UUID
-        :param uuid: 登录的UUID，从获取二维码或者唤醒登录时获取
-        :param device_id: 设备id
-        :return: bool, int (bool: True if logged in, int: expired time if not logged in)
+        """检查登录的UUID状态。
+
+        Args:
+            uuid (str): 登录的UUID
+            device_id (str, optional): 设备ID. Defaults to "".
+
+        Returns:
+            tuple[bool, Union[dict, int]]: 如果登录成功返回(True, 用户信息)，否则返回(False, 过期时间)
+
+        Raises:
+            根据error_handler处理错误
         """
         async with aiohttp.ClientSession() as session:
             json_param = {"Uuid": uuid}
@@ -85,9 +98,14 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def log_out(self) -> bool:
-        """
-        登出
-        :return: bool 成功返回True, 失败False或者报错
+        """登出当前账号。
+
+        Returns:
+            bool: 登出成功返回True，否则返回False
+
+        Raises:
+            UserLoggedOut: 如果未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -105,9 +123,18 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def awaken_login(self, wxid: str = "") -> str:
-        """
-        唤醒登录
-        :return: str (str: Uuid)
+        """唤醒登录。
+
+        Args:
+            wxid (str, optional): 要唤醒的微信ID. Defaults to "".
+
+        Returns:
+            str: 返回新的登录UUID
+
+        Raises:
+            Exception: 如果未提供wxid且未登录
+            LoginError: 如果无法获取UUID
+            根据error_handler处理错误
         """
         if not wxid and not self.wxid:
             raise Exception("Please login using QRCode first")
@@ -128,10 +155,13 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_cached_info(self, wxid: str = None) -> dict:
-        """
-        获取登陆缓存信息
-        :param wxid: 要查询的wxid
-        :return:
+        """获取登录缓存信息。
+
+        Args:
+            wxid (str, optional): 要查询的微信ID. Defaults to None.
+
+        Returns:
+            dict: 返回缓存信息，如果未提供wxid且未登录返回空字典
         """
         if not wxid:
             wxid = self.wxid
@@ -150,9 +180,14 @@ class LoginMixin(WechatAPIClientBase):
                 return {}
 
     async def heartbeat(self) -> bool:
-        """
-        心跳
-        :return: bool 成功返回True, 失败False或者报错
+        """发送心跳包。
+
+        Returns:
+            bool: 成功返回True，否则返回False
+
+        Raises:
+            UserLoggedOut: 如果未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -168,9 +203,14 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def start_auto_heartbeat(self) -> bool:
-        """
-        开始自动心跳
-        :return: bool 成功返回True, 失败False或者报错
+        """开始自动心跳。
+
+        Returns:
+            bool: 成功返回True，否则返回False
+
+        Raises:
+            UserLoggedOut: 如果未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -186,9 +226,14 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def stop_auto_heartbeat(self) -> bool:
-        """
-        停止自动心跳
-        :return: bool 成功返回True, 失败False或者报错
+        """停止自动心跳。
+
+        Returns:
+            bool: 成功返回True，否则返回False
+
+        Raises:
+            UserLoggedOut: 如果未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -204,9 +249,14 @@ class LoginMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_auto_heartbeat_status(self) -> bool:
-        """
-        获取自动心跳状态
-        :return: bool (True if running, False if stopped)
+        """获取自动心跳状态。
+
+        Returns:
+            bool: 如果正在运行返回True，否则返回False
+
+        Raises:
+            UserLoggedOut: 如果未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -223,9 +273,10 @@ class LoginMixin(WechatAPIClientBase):
 
     @staticmethod
     def create_device_name() -> str:
-        """
-        生成一个随机的设备名
-        :return: str
+        """生成一个随机的设备名。
+
+        Returns:
+            str: 返回生成的设备名
         """
         first_names = [
             "Oliver", "Emma", "Liam", "Ava", "Noah", "Sophia", "Elijah", "Isabella",
@@ -251,6 +302,14 @@ class LoginMixin(WechatAPIClientBase):
 
     @staticmethod
     def create_device_id(s: str = "") -> str:
+        """生成设备ID。
+
+        Args:
+            s (str, optional): 用于生成ID的字符串. Defaults to "".
+
+        Returns:
+            str: 返回生成的设备ID
+        """
         if s == "" or s == "string":
             s = ''.join(choice(string.ascii_letters) for _ in range(15))
         md5_hash = hashlib.md5(s.encode()).hexdigest()

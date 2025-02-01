@@ -1,5 +1,3 @@
-from typing import Any
-
 import aiohttp
 
 from .base import *
@@ -9,10 +7,17 @@ from ..errors import *
 
 class UserMixin(WechatAPIClientBase):
     async def get_profile(self, wxid: str = None) -> dict:
-        """
-        :wxid: str 用户wxid
-        获取用户信息
-        :return: dict
+        """获取用户信息。
+
+        Args:
+            wxid (str, optional): 用户wxid. Defaults to None.
+
+        Returns:
+            dict: 用户信息字典
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid and not wxid:
             raise UserLoggedOut("请先登录")
@@ -31,10 +36,18 @@ class UserMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_my_qrcode(self, style: int = 0) -> str:
-        """
-        获取个人二维码
-        :param style: 二维码样式，默认为0
-        :return: 图片的base64
+        """获取个人二维码。
+
+        Args:
+            style (int, optional): 二维码样式. Defaults to 0.
+
+        Returns:
+            str: 图片的base64编码字符串
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内请不要操作以避免风控
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -52,10 +65,13 @@ class UserMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def is_logged_in(self, wxid: str = None) -> bool:
-        """
-        检查是否登录
-        :wxid: str 用户wxid
-        :return: bool
+        """检查是否登录。
+
+        Args:
+            wxid (str, optional): 用户wxid. Defaults to None.
+
+        Returns:
+            bool: 已登录返回True，未登录返回False
         """
         if not wxid:
             wxid = self.wxid

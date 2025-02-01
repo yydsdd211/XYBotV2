@@ -58,13 +58,21 @@ class MessageMixin(WechatAPIClientBase):
         return await future
 
     async def revoke_message(self, wxid: str, client_msg_id: int, create_time: int, new_msg_id: int) -> bool:
-        """
-        撤回消息
-        :param wxid: 接收人
-        :param client_msg_id: 发送消息的返回值
-        :param create_time: 发送消息的返回值
-        :param new_msg_id: 发送消息的返回值
-        :return: bool 成功返回True, 失败False或者报错
+        """撤回消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            client_msg_id (int): 发送消息的返回值
+            create_time (int): 发送消息的返回值
+            new_msg_id (int): 发送消息的返回值
+
+        Returns:
+            bool: 成功返回True，失败返回False
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -84,12 +92,20 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_text_message(self, wxid: str, content: str, at: list[str] = None) -> tuple[int, int, int]:
-        """
-        发送文本消息
-        :param wxid: 接收人
-        :param content: str
-        :param at: list[str]
-        :return: int, int, int (int: ClientMsgid, int: CreateTime, int: NewMsgId)
+        """发送文本消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            content (str): 消息内容
+            at (list[str], optional): 要@的用户列表. Defaults to None.
+
+        Returns:
+            tuple[int, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_text_message, wxid, content, at)
 
@@ -119,12 +135,21 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_image_message(self, wxid: str, image_path: str = "", image_base64: str = "") -> tuple[int, int, int]:
-        """
-        发送图片消息
-        :param wxid: 接收人
-        :param image_path: 与image_base64二选一
-        :param image_base64: 与image_path二选一
-        :return: str, int, int (str: ClientImgId, int: CreateTime, int: NewMsgId)
+        """发送图片消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            image_path (str, optional): 图片路径，与image_base64二选一. Defaults to "".
+            image_base64 (str, optional): 图片base64编码，与image_path二选一. Defaults to "".
+
+        Returns:
+            tuple[int, int, int]: 返回(ClientImgId, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            ValueError: image_path和image_base64都为空或都不为空时
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_image_message, wxid, image_path, image_base64)
 
@@ -215,13 +240,22 @@ class MessageMixin(WechatAPIClientBase):
 
     async def send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
             tuple[int, int, int]:
-        """
-        发送语音消息
-        :param wxid: 接受人
-        :param voice_base64: amr格式 与voice_path二选一
-        :param voice_path: amr格式 与voice_base64二选一
-        :param format: 语音格式 默认amr，支持wav，mp3
-        :return: list[tuple[int, int, int]] (list of (int: ClientMsgid, int: CreateTime, int: NewMsgId))
+        """发送语音消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            voice_base64 (str, optional): 语音base64编码，与voice_path二选一. Defaults to "".
+            voice_path (str, optional): 语音文件路径，与voice_base64二选一. Defaults to "".
+            format (str, optional): 语音格式，支持amr/wav/mp3. Defaults to "amr".
+
+        Returns:
+            tuple[int, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            ValueError: voice_path和voice_base64都为空或都不为空时，或format不支持时
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_voice_message, wxid, voice_base64, voice_path, format)
 
@@ -291,14 +325,22 @@ class MessageMixin(WechatAPIClientBase):
 
     async def send_link_message(self, wxid: str, url: str, title: str = "", description: str = "",
                                 thumb_url: str = "") -> tuple[str, int, int]:
-        """
-        发送链接
-        :param wxid: 接受人
-        :param url: 跳转链接
-        :param title: 标题
-        :param description: 描述
-        :param thumb_url: 缩略图链接
-        :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
+        """发送链接消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            url (str): 跳转链接
+            title (str, optional): 标题. Defaults to "".
+            description (str, optional): 描述. Defaults to "".
+            thumb_url (str, optional): 缩略图链接. Defaults to "".
+
+        Returns:
+            tuple[str, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_link_message, wxid, url, title, description, thumb_url)
 
@@ -323,12 +365,20 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_emoji_message(self, wxid: str, md5: str, total_length: int) -> list[dict]:
-        """
-        发送表情
-        :param wxid: 接受人
-        :param md5: 表情md5
-        :param total_length: 表情总长度
-        :return: list[dict] (list of emojiItem)
+        """发送表情消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            md5 (str): 表情md5值
+            total_length (int): 表情总长度
+
+        Returns:
+            list[dict]: 返回表情项列表(list of emojiItem)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_emoji_message, wxid, md5, total_length)
 
@@ -351,13 +401,21 @@ class MessageMixin(WechatAPIClientBase):
 
     async def send_card_message(self, wxid: str, card_wxid: str, card_nickname: str, card_alias: str = "") -> tuple[
         int, int, int]:
-        """
-        发送名片
-        :param wxid: 接受人
-        :param card_wxid: 名片wxid
-        :param card_alias: 名片备注
-        :param card_nickname: 名片昵称
-        :return: int, int, int (int: ClientMsgid, int: CreateTime, int: NewMsgId)
+        """发送名片消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            card_wxid (str): 名片用户的wxid
+            card_nickname (str): 名片用户的昵称
+            card_alias (str, optional): 名片用户的备注. Defaults to "".
+
+        Returns:
+            tuple[int, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_card_message, wxid, card_wxid, card_nickname, card_alias)
 
@@ -383,12 +441,20 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_app_message(self, wxid: str, xml: str, type: int) -> tuple[str, int, int]:
-        """
-        发送app消息
-        :param wxid: 接受人
-        :param xml: app消息xml
-        :param type: app消息类型
-        :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
+        """发送应用消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            xml (str): 应用消息的xml内容
+            type (int): 应用消息类型
+
+        Returns:
+            tuple[str, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_app_message, wxid, xml, type)
 
@@ -412,11 +478,19 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_cdn_file_msg(self, wxid: str, xml: str) -> tuple[str, int, int]:
-        """
-        转发文件消息
-        :param wxid: 接收人
-        :param xml: 转发的文件，收到的消息xml
-        :return: str, int, int (str: ClientMsgid, int: CreateTime, int: NewMsgId)
+        """转发文件消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            xml (str): 要转发的文件消息xml内容
+
+        Returns:
+            tuple[str, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_cdn_file_msg, wxid, xml)
 
@@ -439,11 +513,19 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_cdn_img_msg(self, wxid: str, xml: str) -> tuple[str, int, int]:
-        """
-        转发图片消息
-        :param wxid: 接收人
-        :param xml: 转发的图片，收到的消息xml
-        :return: str, int, int (str: ClientImgId, int: CreateTime, int: NewMsgId)
+        """转发图片消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            xml (str): 要转发的图片消息xml内容
+
+        Returns:
+            tuple[str, int, int]: 返回(ClientImgId, CreateTime, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
         return await self._queue_message(self._send_cdn_img_msg, wxid, xml)
 
@@ -466,13 +548,21 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def send_cdn_video_msg(self, wxid: str, xml: str) -> tuple[str, int]:
+        """转发视频消息。
+
+        Args:
+            wxid (str): 接收人wxid
+            xml (str): 要转发的视频消息xml内容
+
+        Returns:
+            tuple[str, int]: 返回(ClientMsgid, NewMsgId)
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            BanProtection: 登录新设备后4小时内操作
+            根据error_handler处理错误
         """
-        转发视频消息
-        :param wxid: 接受人
-        :param xml: 转发的视频，收到的消息xml
-        :return: tuple[str, int] (str: ClientMsgid, int: NewMsgId)
-        """
-        return await self._queue_message(self._send_cdn_video_msg, wxid, wxid, xml)
+        return await self._queue_message(self._send_cdn_video_msg, wxid, xml)
 
     async def _send_cdn_video_msg(self, wxid: str, xml: str) -> tuple[int, int]:
         if not self.wxid:
@@ -493,9 +583,14 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def sync_message(self) -> dict:
-        """
-        同步消息
-        :return: dict
+        """同步消息。
+
+        Returns:
+            dict: 返回同步到的消息数据
+
+        Raises:
+            UserLoggedOut: 未登录时调用
+            根据error_handler处理错误
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")

@@ -3,17 +3,20 @@ from typing import Union, Any
 import aiohttp
 
 from .base import *
-from ..errors import *
 from .protect import protector
+from ..errors import *
 
 
 class ChatroomMixin(WechatAPIClientBase):
     async def add_chatroom_member(self, chatroom: str, wxid: str) -> bool:
-        """
-        添加群成员(群聊最多40人)
-        :param chatroom: 群聊wxid
-        :param wxid: 要添加的wxid
-        :return: bool 成功返回True, 失败False或者报错
+        """添加群成员(群聊最多40人)
+
+        Args:
+            chatroom: 群聊wxid
+            wxid: 要添加的wxid
+
+        Returns:
+            bool: 成功返回True, 失败False或者报错
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -31,10 +34,13 @@ class ChatroomMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_chatroom_announce(self, chatroom: str) -> dict:
-        """
-        获取群聊公告
-        :param chatroom: 群聊id
-        :return: dict (dict of chatroom info)
+        """获取群聊公告
+
+        Args:
+            chatroom: 群聊id
+
+        Returns:
+            dict: dict of chatroom info
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -52,10 +58,13 @@ class ChatroomMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_chatroom_info(self, chatroom: str) -> dict:
-        """
-        获取群聊信息
-        :param chatroom: 群聊id
-        :return: dict (dict of chatroom info)
+        """获取群聊信息
+
+        Args:
+            chatroom: 群聊id
+
+        Returns:
+            dict: dict of chatroom info
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -73,10 +82,13 @@ class ChatroomMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_chatroom_member_list(self, chatroom: str) -> list[dict]:
-        """
-        获取群聊成员列表
-        :param chatroom: 群聊id
-        :return: list[dict] (list of chatroom member)
+        """获取群聊成员列表
+
+        Args:
+            chatroom: 群聊id
+
+        Returns:
+            list[dict]: list of chatroom member
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -92,10 +104,13 @@ class ChatroomMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def get_chatroom_qrcode(self, chatroom: str) -> dict[str, Any]:
-        """
-        获取群聊二维码
-        :param chatroom:
-        :return: 二维码的base64
+        """获取群聊二维码
+
+        Args:
+            chatroom: 群聊id
+
+        Returns:
+            dict: {"base64": 二维码的base64, "description": 二维码描述}
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
@@ -114,11 +129,14 @@ class ChatroomMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     async def invite_chatroom_member(self, wxid: Union[str, list], chatroom: str) -> bool:
-        """
-        邀请群聊成员(群聊大于40人)
-        :param wxid:
-        :param chatroom:
-        :return: bool 成功返回True, 失败False或者报错
+        """邀请群聊成员(群聊大于40人)
+
+        Args:
+            wxid: 要邀请的用户wxid或wxid列表
+            chatroom: 群聊id
+
+        Returns:
+            bool: 成功返回True, 失败False或者报错
         """
         if not self.wxid:
             raise UserLoggedOut("请先登录")
