@@ -19,7 +19,7 @@ timezone = "Asia/Shanghai"
 auto-restart = false
 
 # 屏蔽设置
-ignore-mode = "Whitelist" # 可为 "None"，"Whitelist"，"Blacklist
+ignore-mode = "None" # 可为 "None"，"Whitelist"，"Blacklist
 whitelist = ["wxid_1", "wxid_2", "chatroom@111", "chatroom@222"]
 blacklist = ["wxid_3", "wxid_4", "chatroom@333", "chatroom@444"]
 
