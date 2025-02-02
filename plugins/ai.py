@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import imghdr
 import io
@@ -173,10 +174,18 @@ class Ai(PluginBase):
         self.inited = False
 
     async def async_init(self):
-        if not self.inited or self.sqlite_conn is None or self.sqlite_conn.closed:  # 添加连接状态检查
-            if self.sqlite_conn and not self.sqlite_conn.closed:
-                await self.sqlite_conn.close()
+        try:
+            if self.sqlite_conn:
+                try:
+                    async with self.sqlite_conn.cursor() as cursor:
+                        await cursor.execute("SELECT 1")
+                    return  # 如果查询成功，说明连接有效，直接返回
+                except Exception:
+                    # 如果查询失败，说明连接无效，需要重新初始化
+                    if self.sqlite_conn:
+                        await self.sqlite_conn.close()
 
+            # 创建新连接和初始化
             self.sqlite_conn = await aiosqlite.connect(self.ai_db_url)
             self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
 
@@ -189,12 +198,14 @@ class Ai(PluginBase):
             self.inited = True
 
             logger.info("AI插件数据库初始化完毕")
+        except Exception as e:
+            logger.error(f"数据库初始化失败: {str(e)}")
+            raise
 
     def __del__(self):
         """确保资源被正确释放"""
         try:
-            if hasattr(self, 'sqlite_conn') and self.sqlite_conn and not self.sqlite_conn.closed:
-                import asyncio
+            if hasattr(self, 'sqlite_conn') and self.sqlite_conn:
                 asyncio.run(self.sqlite_conn.close())
         except Exception as e:
             logger.error(f"关闭数据库连接时出错: {str(e)}")
@@ -567,7 +578,7 @@ class Ai(PluginBase):
             # 重新初始化 sqlite_saver
             self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
 
-        except:
+        except Exception as e:
             logger.error(traceback.format_exc())
             return False
         finally:
