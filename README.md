@@ -2,6 +2,10 @@
 
 XYBot V2 是一个功能丰富的微信机器人框架,支持多种互动功能和游戏玩法。
 
+# 📄 文档
+
+# https://henryxiaoyang.github.io/XYBotV2
+
 # ✨ 主要功能
 
 ## 🛠️ 基础功能
