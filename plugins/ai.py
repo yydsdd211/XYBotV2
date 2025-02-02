@@ -268,7 +268,7 @@ class Ai(PluginBase):
         if message["IsGroup"]:
             message["Content"] = content[len(command[0]):].strip()
 
-        if self.check_point(bot, message):
+        if await self.check_point(bot, message):
             await self.get_ai_response(bot, message)
 
     @on_at_message
@@ -283,7 +283,7 @@ class Ai(PluginBase):
 
         message["Content"] = str(message["Content"]).replace(f"@{bot.nickname}\u2005", "").strip()
 
-        if self.check_point(bot, message):
+        if await self.check_point(bot, message):
             await self.get_ai_response(bot, message)
 
     @on_voice_message
@@ -299,7 +299,7 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        if self.check_point(bot, message):
+        if await self.check_point(bot, message):
             await self.get_ai_response(bot, message)
 
     @on_image_message
@@ -315,7 +315,7 @@ class Ai(PluginBase):
 
         await self.async_init()
 
-        if self.check_point(bot, message):
+        if await self.check_point(bot, message):
             await self.get_ai_response(bot, message)
 
     @schedule('cron', hour=5)
@@ -567,7 +567,7 @@ class Ai(PluginBase):
             # 重新初始化 sqlite_saver
             self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
 
-        except Exception as e:
+        except:
             logger.error(traceback.format_exc())
             return False
         finally:
