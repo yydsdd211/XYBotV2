@@ -173,7 +173,10 @@ class Ai(PluginBase):
         self.inited = False
 
     async def async_init(self):
-        if not self.inited:
+        if not self.inited or self.sqlite_conn is None or self.sqlite_conn.closed:  # 添加连接状态检查
+            if self.sqlite_conn and not self.sqlite_conn.closed:
+                await self.sqlite_conn.close()
+
             self.sqlite_conn = await aiosqlite.connect(self.ai_db_url)
             self.sqlite_saver = AsyncSqliteSaver(self.sqlite_conn)
 
@@ -190,8 +193,9 @@ class Ai(PluginBase):
     def __del__(self):
         """确保资源被正确释放"""
         try:
-            if hasattr(self, 'sqlite_conn'):
-                self.sqlite_conn.close()
+            if hasattr(self, 'sqlite_conn') and self.sqlite_conn and not self.sqlite_conn.closed:
+                import asyncio
+                asyncio.run(self.sqlite_conn.close())
         except Exception as e:
             logger.error(f"关闭数据库连接时出错: {str(e)}")
 
