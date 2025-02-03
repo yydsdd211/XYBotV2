@@ -17,7 +17,7 @@ XYBot V2 是一个功能丰富的微信机器人框架,支持多种互动功能�
 
 # 💬 微信交流群
 
-<div style="text-align: center">
+<div style="text-align: center" align="center">
     <img alt="微信交流群二维码" src="https://qrcode.yangres.com/get_image" style="width: 300px; height: auto;">
     <p>微信扫码加入交流群</p>
     <a href="https://qrcode.yangres.com/get_image">🔗图片会被缓存，点我查看最新二维码</a>
