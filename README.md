@@ -427,3 +427,17 @@ class ExamplePlugin(PluginBase):
     async def new_year_task(self, bot: WechatAPIClient):
         logger.info("我在2025年1月29日执行")
 ```
+
+# 💻 代码提交
+
+提交代码时请使用 `feat: something` 作为说明，支持的标识如下:
+
+- `feat` 新功能(feature)
+- `fix` 修复bug
+- `docs` 文档(documentation)
+- `style` 格式(不影响代码运行的变动)
+- `ref` 重构(即不是新增功能，也不是修改bug的代码变动)
+- `perf` 性能优化(performance)
+- `test` 增加测试
+- `chore` 构建过程或辅助工具的变动
+- `revert` 撤销
