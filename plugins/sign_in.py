@@ -64,27 +64,36 @@ class SignIn(PluginBase):
             await bot.send_at_message(message["FromWxid"], output, [sign_wxid])
             return
 
+        # 检查是否断开连续签到（超过1天没签到）
+        if last_sign and (now - last_sign).days > 1:
+            old_streak = self.db.get_signin_streak(sign_wxid)
+            streak = 1  # 重置连续签到天数
+            streak_broken = True
+        else:
+            old_streak = self.db.get_signin_streak(sign_wxid)
+            streak = old_streak + 1
+            streak_broken = False
+
         self.db.set_signin_stat(sign_wxid, now)
-
-        signin_points = randint(self.min_points, self.max_points)  # 随机积分
-
-        streak = self.db.get_signin_streak(sign_wxid) + 1  # 获取连续签到天数
         self.db.set_signin_streak(sign_wxid, streak)  # 设置连续签到天数
         streak_points = min(streak // self.streak_cycle, self.max_streak_point)  # 计算连续签到奖励
 
+        signin_points = randint(self.min_points, self.max_points)  # 随机积分
         self.db.add_points(sign_wxid, signin_points + streak_points)  # 增加积分
 
         output = ("\n"
                   f"-----XYBot-----\n"
                   f"签到成功！你领到了 {signin_points} 个积分！✅\n")
 
-        if streak > 1:
+        if streak_broken:
+            output += f"你断开了 {old_streak} 天的连续签到！[心碎]"
+        elif streak > 1:
             output += f"你连续签到了 {streak} 天！"
 
         if streak_points > 0:
             output += f" 再奖励 {streak_points} 积分！"
 
-        if streak > 1:
+        if streak > 1 and not streak_broken:
             output += "[爱心]"
 
         await bot.send_at_message(message["FromWxid"], output, [sign_wxid])
