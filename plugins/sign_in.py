@@ -38,6 +38,16 @@ class SignIn(PluginBase):
 
         self.db = BotDatabase()
 
+        # 每日签到排名数据
+        self.today_signin_count = 0
+        self.last_reset_date = datetime.now(tz=pytz.timezone(self.timezone)).date()
+
+    def _check_and_reset_count(self):
+        current_date = datetime.now(tz=pytz.timezone(self.timezone)).date()
+        if current_date != self.last_reset_date:
+            self.today_signin_count = 0
+            self.last_reset_date = current_date
+
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
@@ -48,6 +58,9 @@ class SignIn(PluginBase):
 
         if not len(command) or command[0] not in self.command:
             return
+
+        # 检查是否需要重置计数
+        self._check_and_reset_count()
 
         sign_wxid = message["SenderWxid"]
 
@@ -81,9 +94,14 @@ class SignIn(PluginBase):
         signin_points = randint(self.min_points, self.max_points)  # 随机积分
         self.db.add_points(sign_wxid, signin_points + streak_points)  # 增加积分
 
+        # 增加签到计数并获取排名
+        self.today_signin_count += 1
+        today_rank = self.today_signin_count
+
         output = ("\n"
                   f"-----XYBot-----\n"
-                  f"签到成功！你领到了 {signin_points} 个积分！✅\n")
+                  f"签到成功！你领到了 {signin_points} 个积分！✅\n"
+                  f"你是今天第 {today_rank} 个签到的！🎉\n")
 
         if streak_broken:
             output += f"你断开了 {old_streak} 天的连续签到！[心碎]"
