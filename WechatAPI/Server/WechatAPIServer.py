@@ -67,7 +67,7 @@ class WechatAPIServer:
             line = self.process.stdout.readline()
             if not line:
                 break
-            logger.log("API", line.decode("utf-8").strip())
+            # logger.log("API", line.decode("utf-8").strip())
 
         # 检查进程是否异常退出
         return_code = self.process.poll()

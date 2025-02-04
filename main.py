@@ -135,16 +135,6 @@ if __name__ == "__main__":
         level="DEBUG",
     )
     logger.add(
-        "logs/WechatAPI_{time}.log",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-        encoding="utf-8",
-        enqueue=True,
-        retention="2 weeks",
-        rotation="00:01",
-        filter=is_api_message,
-        level="API",
-    )
-    logger.add(
         sys.stdout,
         colorize=True,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
