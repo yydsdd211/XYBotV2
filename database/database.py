@@ -1,8 +1,6 @@
-import asyncio
 import datetime
 import tomllib
-from asyncio import Queue, create_task
-from functools import wraps
+from concurrent.futures import ThreadPoolExecutor
 from typing import Union
 
 from loguru import logger
@@ -51,47 +49,23 @@ class BotDatabase(metaclass=Singleton):
         Base.metadata.create_all(self.engine)
         logger.success("数据库初始化成功")
 
-        # 创建积分操作队列
-        self._points_queue = Queue()
-        self._queue_task = None
-        self._start_queue_worker()
+        # 创建线程池执行器
+        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="database")
 
-    def _start_queue_worker(self):
-        """启动队列处理器"""
-
-        async def worker():
-            while True:
-                func, args, kwargs, future = await self._points_queue.get()
-                try:
-                    result = func(*args, **kwargs)
-                    future.set_result(result)
-                except Exception as e:
-                    future.set_exception(e)
-                finally:
-                    self._points_queue.task_done()
-
-        loop = asyncio.get_event_loop()
-        self._queue_task = create_task(worker())
-
-    def _queue_operation(self, func):
-        """装饰器：将操作加入队列"""
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            future = asyncio.Future()
-            asyncio.get_event_loop().call_soon_threadsafe(
-                self._points_queue.put_nowait,
-                (func.__get__(self, BotDatabase), args, kwargs, future)
-            )
-            return asyncio.get_event_loop().run_until_complete(future)
-
-        return wrapper
+    def _execute_in_queue(self, method, *args, **kwargs):
+        """在队列中执行数据库操作"""
+        future = self.executor.submit(method, *args, **kwargs)
+        try:
+            return future.result(timeout=20)  # 20秒超时
+        except Exception as e:
+            logger.error(f"数据库操作失败: {method.__name__} - {str(e)}")
+            raise
 
     # USER
 
     def add_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point addition"""
-        return self._queue_operation(self._add_points)(wxid, num)
+        return self._execute_in_queue(self._add_points, wxid, num)
 
     def _add_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point addition"""
@@ -119,7 +93,7 @@ class BotDatabase(metaclass=Singleton):
 
     def set_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point setting"""
-        return self._queue_operation(self._set_points)(wxid, num)
+        return self._execute_in_queue(self._set_points, wxid, num)
 
     def _set_points(self, wxid: str, num: int) -> bool:
         """Thread-safe point setting"""
@@ -145,7 +119,7 @@ class BotDatabase(metaclass=Singleton):
 
     def get_points(self, wxid: str) -> int:
         """Get user points"""
-        return self._queue_operation(self._get_points)(wxid)
+        return self._execute_in_queue(self._get_points, wxid)
 
     def _get_points(self, wxid: str) -> int:
         """Get user points"""
@@ -157,21 +131,20 @@ class BotDatabase(metaclass=Singleton):
             session.close()
 
     def get_signin_stat(self, wxid: str) -> datetime.datetime:
-        """Thread-safe get user's last login time"""
-        return self._queue_operation(self._get_signin_stat)(wxid)
+        """获取用户签到状态"""
+        return self._execute_in_queue(self._get_signin_stat, wxid)
 
     def _get_signin_stat(self, wxid: str) -> datetime.datetime:
         session = self.DBSession()
         try:
-            user = session.query(User).filter_by(wxid=wxid) \
-                .with_for_update().first()
+            user = session.query(User).filter_by(wxid=wxid).first()
             return user.signin_stat if user else datetime.datetime.fromtimestamp(0)
         finally:
             session.close()
 
     def set_signin_stat(self, wxid: str, signin_time: datetime.datetime) -> bool:
         """Thread-safe set user's signin time"""
-        return self._queue_operation(self._set_signin_stat)(wxid, signin_time)
+        return self._execute_in_queue(self._set_signin_stat, wxid, signin_time)
 
     def _set_signin_stat(self, wxid: str, signin_time: datetime.datetime) -> bool:
         session = self.DBSession()
@@ -263,7 +236,7 @@ class BotDatabase(metaclass=Singleton):
 
     def safe_trade_points(self, trader_wxid: str, target_wxid: str, num: int) -> bool:
         """Thread-safe points trading between users"""
-        return self._queue_operation(self._safe_trade_points)(trader_wxid, target_wxid, num)
+        return self._execute_in_queue(self._safe_trade_points, trader_wxid, target_wxid, num)
 
     def _safe_trade_points(self, trader_wxid: str, target_wxid: str, num: int) -> bool:
         """Thread-safe points trading between users"""
@@ -357,7 +330,7 @@ class BotDatabase(metaclass=Singleton):
                 new_thread_ids = dict(user.llm_thread_id or {})
                 new_thread_ids[namespace] = data
                 user.llm_thread_id = new_thread_ids
-            
+
             session.commit()
             logger.info(f"数据库: 成功保存 {wxid} 的 llm thread id")
             return True
@@ -385,7 +358,7 @@ class BotDatabase(metaclass=Singleton):
 
     def get_signin_streak(self, wxid: str) -> int:
         """Thread-safe get user's signin streak"""
-        return self._queue_operation(self._get_signin_streak)(wxid)
+        return self._execute_in_queue(self._get_signin_streak, wxid)
 
     def _get_signin_streak(self, wxid: str) -> int:
         session = self.DBSession()
@@ -397,7 +370,7 @@ class BotDatabase(metaclass=Singleton):
 
     def set_signin_streak(self, wxid: str, streak: int) -> bool:
         """Thread-safe set user's signin streak"""
-        return self._queue_operation(self._set_signin_streak)(wxid, streak)
+        return self._execute_in_queue(self._set_signin_streak, wxid, streak)
 
     def _set_signin_streak(self, wxid: str, streak: int) -> bool:
         session = self.DBSession()
@@ -458,3 +431,10 @@ class BotDatabase(metaclass=Singleton):
             return False
         finally:
             session.close()
+
+    def __del__(self):
+        """确保关闭时清理资源"""
+        if hasattr(self, 'executor'):
+            self.executor.shutdown(wait=True)
+        if hasattr(self, 'engine'):
+            self.engine.dispose()
