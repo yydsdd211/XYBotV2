@@ -84,7 +84,7 @@ class SignIn(PluginBase):
             streak_broken = True
         else:
             old_streak = self.db.get_signin_streak(sign_wxid)
-            streak = old_streak + 1
+            streak = old_streak + 1 if old_streak else 1  # 如果是第一次签到，从1开始
             streak_broken = False
 
         self.db.set_signin_stat(sign_wxid, now)
@@ -103,7 +103,7 @@ class SignIn(PluginBase):
                   f"签到成功！你领到了 {signin_points} 个积分！✅\n"
                   f"你是今天第 {today_rank} 个签到的！🎉\n")
 
-        if streak_broken:
+        if streak_broken and old_streak > 0:  # 只有在真的断签且之前有签到记录时才显示
             output += f"你断开了 {old_streak} 天的连续签到！[心碎]"
         elif streak > 1:
             output += f"你连续签到了 {streak} 天！"
