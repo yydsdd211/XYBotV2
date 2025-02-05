@@ -73,7 +73,7 @@ model-name = ""
 size = "1024x1024" #生成的图片的大小
 additional-param = { } # 额外自定义设置
 
-add-prompt = "\n- 您可以使用GenerateImage函数在适当的时候生成图像。当用户请求图像时，请确保使用此功能。"
+add-prompt = "\n- 您可以使用GenerateImage函数在适当的时候生成图像。\n- 用户输入用什么语言，图像prompt就用什么语言。\n- 当用户请求图像时，请确保使用此功能。"
 
 [Ai.SpeechToText]
 # 重要：接口需要是OpenAI API格式

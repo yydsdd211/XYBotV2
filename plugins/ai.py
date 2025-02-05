@@ -453,8 +453,9 @@ class Ai(PluginBase):
                         await bot.send_at_message(from_wxid, f"\n🖼️正在生成图片...", [sender_wxid])
                         try:
                             prompt = json.loads(tool_call["function"]["arguments"])["prompt"]
-                            img_b64 = await self.generate_image(prompt)
-                            await bot.send_image_message(from_wxid, image_base64=img_b64)
+                            b64_list = await self.generate_image(prompt)
+                            for img_b64 in b64_list:
+                                await bot.send_image_message(from_wxid, image_base64=img_b64)
                         except Exception as e:
                             logger.error(f"生成图片失败: {traceback.format_exc()}")
                             await bot.send_at_message(from_wxid, f"\n生成图片失败: {str(e)}", [sender_wxid])
@@ -467,7 +468,7 @@ class Ai(PluginBase):
             )
             logger.error(traceback.format_exc())
 
-    async def generate_image(self, prompt: str) -> str:
+    async def generate_image(self, prompt: str) -> list:
         client = AsyncOpenAI(
             base_url=self.image_base_url,
             api_key=self.image_api_key
@@ -482,7 +483,10 @@ class Ai(PluginBase):
                 response_format="b64_json",
                 extra_body=self.image_additional_param
             )
-            return resp.data[0].b64_json
+            b64_list = []
+            for item in resp.data:
+                b64_list.append(item.b64_json)
+            return b64_list
         except:
             logger.error(traceback.format_exc())
             raise
