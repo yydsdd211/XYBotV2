@@ -163,7 +163,7 @@ docker-compose logs --tail=100 xybotv2
 
 #### 1. 🔧 环境准备
 
-- 安装 Python 3.11 (必须是3.11版本): https://www.python.org/downloads/release/python-31111/
+- 安装 Python 3.11 (必须是3.11版本): https://www.python.org/downloads/release/python-3119/
     - 在安装过程中勾选 "Add Python to PATH" 选项
     - 或者手动添加：
         1. 右键点击 "此电脑" -> "属性" -> "高级系统设置" -> "环境变量"
