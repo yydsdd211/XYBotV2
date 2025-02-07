@@ -166,11 +166,15 @@ async def bot_core():
     # ========== 登录完毕 开始初始化 ========== #
 
     # 开启自动心跳
-    success = await bot.start_auto_heartbeat()
-    if success:
-        logger.success("已开启自动心跳")
-    else:
-        logger.error("开启自动心跳失败")
+    try:
+        success = await bot.start_auto_heartbeat()
+        if success:
+            logger.success("已开启自动心跳")
+        else:
+            logger.warning("开启自动心跳失败")
+    except Exception as e:
+        if "在运行" not in e:
+            logger.warning("自动心跳启动失败")
 
     # 初始化机器人
     xybot = XYBot(bot)
@@ -204,7 +208,14 @@ async def bot_core():
     logger.success("开始处理消息")
     while True:
         now = time.time()
-        data = await bot.sync_message()
+
+        try:
+            data = await bot.sync_message()
+        except Exception as e:
+            logger.warning("获取新消息失败 {}", e)
+            await asyncio.sleep(5)
+            continue
+
         data = data.get("AddMsgs", None)
         if data:
             for message in data:
