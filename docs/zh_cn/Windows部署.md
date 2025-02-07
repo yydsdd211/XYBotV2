@@ -26,24 +26,16 @@
         ffmpeg -version
         ```
 
-- 安装 Redis for Windows:
-    - 从 [Redis-Windows](https://github.com/redis-windows/redis-windows/releases) 下载最新版本 (目前是7.4.2)
-    - 下载 `Redis-7.4.2-Windows-x64-msys2-with-Service.zip` (推荐,使用MSYS2编译的服务版本)
-    - 解压到合适的目录(如 `C:\Redis`)
-    - 以管理员身份运行 PowerShell 或命令提示符,执行:
+- 安装 Redis:
+    - 从 [Redis](https://github.com/tporadowski/redis/releases/tag/v5.0.14.1) 下载最新版本 (目前是7.4.2)
+    - 下载并解压 `Redis-x64-5.0.14.1.zip`
+    - 在命令行执行:
       ```bash
-      # 进入Redis目录
-      cd C:\Redis
-      
-      # 安装Redis服务
-      redis-server.exe --service-install redis.windows.conf
+      # 进入目录
+      cd Redis-x64-5.0.14.1
       
       # 启动Redis服务
-      redis-server.exe --service-start
-      
-      # 验证Redis是否正常运行
-      redis-cli.exe ping
-      # 如果返回PONG则表示Redis已成功运行
+      start redis-server.exe
       ```
 
 ## 2. ⬇️ 下载项目
