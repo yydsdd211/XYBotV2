@@ -77,3 +77,14 @@ docker-compose logs -f xybotv2
 # 查看最近100行日志
 docker-compose logs --tail=100 xybotv2
 ```
+
+4. 与网络相关的报错
+
+- 检查网络连接，是否能ping通微信服务器
+- 尝试关闭代理软件，尝试重启电脑
+- 尝试重启XYBot和Redis
+- 如是Docker部署，检查Docker容器网络是否能连接到微信服务器和Dragonfly数据库
+
+5. `正在运行`相关的报错
+
+- 将占用9000端口的进程强制结束

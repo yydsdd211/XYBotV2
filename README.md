@@ -349,77 +349,6 @@ python3 main.py
 > [!TIP]
 > 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
 
-# 🔨 开发说明
-
-## 🧩 插件开发
-
-所有插件需继承 `PluginBase` 类,实现相应的处理方法。示例:
-
-```python
-from loguru import logger
-
-from WechatAPI import WechatAPIClient
-from utils.decorators import *
-from utils.plugin_base import PluginBase
-
-
-class ExamplePlugin(PluginBase):
-    description = "示例插件"
-    author = "HenryXiaoYang"
-    version = "1.0.0"
-
-    def __init__(self):
-        super().__init__()
-
-    @on_text_message
-    async def handle_text(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了文本消息")
-
-    @on_at_message
-    async def handle_at(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了被@消息")
-
-    @on_voice_message
-    async def handle_voice(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了语音消息")
-
-    @on_image_message
-    async def handle_image(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了图片消息")
-
-    @on_video_message
-    async def handle_video(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了视频消息")
-
-    @on_file_message
-    async def handle_file(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了文件消息")
-
-    @on_quote_message
-    async def handle_quote(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了引用消息")
-
-    @on_pat_message
-    async def handle_pat(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了拍一拍消息")
-
-    @on_emoji_message
-    async def handle_emoji(self, bot: WechatAPIClient, message: dict):
-        logger.info("收到了表情消息")
-
-    @schedule('interval', seconds=5)
-    async def periodic_task(self, bot: WechatAPIClient):
-        logger.info("我每5秒执行一次")
-
-    @schedule('cron', hour=8, minute=30, second=30)
-    async def daily_task(self, bot: WechatAPIClient):
-        logger.info("我每天早上8点30分30秒执行")
-
-    @schedule('date', run_date='2025-01-29 00:00:00')
-    async def new_year_task(self, bot: WechatAPIClient):
-        logger.info("我在2025年1月29日执行")
-```
-
 # 💻 代码提交
 
 提交代码时请使用 `feat: something` 作为说明，支持的标识如下:
@@ -433,3 +362,16 @@ class ExamplePlugin(PluginBase):
 - `test` 增加测试
 - `chore` 构建过程或辅助工具的变动
 - `revert` 撤销
+
+## ❓ 常见问题
+
+1. 与网络相关的报错
+
+- 检查网络连接，是否能ping通微信服务器
+- 尝试关闭代理软件，尝试重启电脑
+- 尝试重启XYBot和Redis
+- 如是Docker部署，检查Docker容器网络是否能连接到微信服务器和Dragonfly数据库
+
+2. `正在运行`相关的报错
+
+- 将占用9000端口的进程强制结束
