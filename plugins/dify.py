@@ -36,6 +36,7 @@ class Dify(PluginBase):
         self.base_url = plugin_config["base-url"]
 
         self.commands = plugin_config["commands"]
+        self.other_plugin_cmd = plugin_config["other-plugin-cmd"]
         self.command_tip = plugin_config["command-tip"]
 
         self.price = plugin_config["price"]
@@ -51,11 +52,13 @@ class Dify(PluginBase):
 
         command = str(message["Content"]).strip().split(" ")
 
-        if (not command or command[0] not in self.commands) and message["IsGroup"]:
+        if (not command or command[0] not in self.commands) and message["IsGroup"]:  # 不是指令，且是群聊
             return
-
-        if len(command) == 1:
+        elif len(command) == 1 and command[0] in self.commands:  # 只是指令，但没请求内容
             await bot.send_at_message(message["FromWxid"], "\n" + self.command_tip, [message["SenderWxid"]])
+            return
+        elif command and command[0] in self.other_plugin_cmd:  # 指令来自其他插件
+            return
 
         if await self._check_point(bot, message):
             await self.dify(bot, message, message["Content"])
