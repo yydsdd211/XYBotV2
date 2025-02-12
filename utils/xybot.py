@@ -185,7 +185,7 @@ class XYBot:
 
         logger.info("收到语音消息: {}", message)
 
-        if message["IsGroup"]:
+        if message["IsGroup"] or not message.get("ImgBuf", {}).get("buffer", ""):
             # 解析语音消息
             voiceurl, length = None, None
             try:

@@ -2,35 +2,13 @@ services:
   xybotv2:
     image: henryxiaoyang/xybotv2:latest
     container_name: XYBotV2
-    restart: unless-stopped
+    restart: on-failure:3
     volumes:
       - xybotv2:/app
-    networks:
-      - xybotv2-network
-    depends_on:
-      - dragonfly
-    environment:
-      - REDIS_HOST=dragonfly
-
-  dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly
-    container_name: dragonfly
-    restart: unless-stopped
-    ulimits:
-      memlock: -1
-    volumes:
-      - dragonfly-data:/data
-    networks:
-      - xybotv2-network
-    ports:
-      - "6379:6379"  # Redis 兼容端口
-
-networks:
-  xybotv2-network:
-    name: xybotv2-network
+      - redis_data:/var/lib/redis
 
 volumes:
-  dragonfly-data:
-    name: dragonfly-data
+  redis_data:
+    name: redis_data
   xybotv2:
     name: xybotv2

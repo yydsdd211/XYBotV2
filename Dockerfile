@@ -10,6 +10,7 @@ ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
@@ -21,5 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制应用代码
 COPY . .
 
-CMD ["python", "main.py"]
+# 启动脚本
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+CMD ["./entrypoint.sh"]
 
