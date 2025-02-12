@@ -108,7 +108,10 @@ class XYBot:
             logger.error("解析文本消息失败: {}", e)
             return
 
-        ats = ats.strip(",").split(",")
+        if ats:
+            ats = ats.strip(",").split(",")
+        else:  # 修复
+            ats = []
         message["Ats"] = ats if ats[0] != "" else []
 
         if self.wxid in ats:
