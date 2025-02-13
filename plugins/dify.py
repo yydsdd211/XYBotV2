@@ -43,6 +43,8 @@ class Dify(PluginBase):
         self.admin_ignore = plugin_config["admin_ignore"]
         self.whitelist_ignore = plugin_config["whitelist_ignore"]
 
+        self.http_proxy = plugin_config["http-proxy"]
+
         self.db = BotDatabase()
 
     @on_text_message
@@ -174,7 +176,7 @@ class Dify(PluginBase):
         url = f"{self.base_url}/chat-messages"
 
         ai_resp = ""
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(proxy=self.http_proxy) as session:
             async with session.post(url=url, headers=headers, data=payload) as resp:
                 if resp.status == 200:
                     # 读取响应
@@ -238,7 +240,7 @@ class Dify(PluginBase):
 
         url = f"{self.base_url}/files/upload"
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(proxy=self.http_proxy) as session:
             async with session.post(url, headers=headers, data=formdata) as resp:
                 resp_json = await resp.json()
 
@@ -267,16 +269,14 @@ class Dify(PluginBase):
         if text:
             await bot.send_at_message(message["FromWxid"], "\n" + text, [message["SenderWxid"]])
 
-    @staticmethod
-    async def download_file(url: str) -> bytes:
-        async with aiohttp.ClientSession() as session:
+    async def download_file(self, url: str) -> bytes:
+        async with aiohttp.ClientSession(proxy=self.http_proxy) as session:
             async with session.get(url) as resp:
                 return await resp.read()
 
-    @staticmethod
-    async def dify_handle_image(bot: WechatAPIClient, message: dict, image: Union[str, bytes]):
+    async def dify_handle_image(self, bot: WechatAPIClient, message: dict, image: Union[str, bytes]):
         if isinstance(image, str) and image.startswith("http"):
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(proxy=self.http_proxy) as session:
                 async with session.get(image) as resp:
                     image = bot.byte_to_base64(await resp.read())
         elif isinstance(image, bytes):

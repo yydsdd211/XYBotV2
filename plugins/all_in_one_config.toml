@@ -17,6 +17,11 @@ price = 0 # 用一次扣积分，如果0则不扣
 admin_ignore = true #admin是否忽略扣除
 whitelist_ignore = true #白名单是否忽略扣除
 
+# Http代理设置
+# 格式: http://用户名:密码@代理地址:代理端口
+# 例如：http://127.0.0.1:7890
+http-proxy = ""
+
 [BotStatus]
 enable = true
 command = ["status", "bot", "机器人状态", "状态"]
