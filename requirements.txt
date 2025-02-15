@@ -14,3 +14,4 @@ qrcode~=8.0
 moviepy~=2.1.2
 pysilk-mod~=1.6.4
 xywechatpad-binary==1.0.0
+pymediainfo~=7.0.1
