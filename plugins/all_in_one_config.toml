@@ -269,3 +269,9 @@ count = 3
 
 [GoodMorning]
 enable = true
+
+[Douyin]
+# Http代理设置
+# 格式: http://用户名:密码@代理地址:代理端口
+# 例如：http://127.0.0.1:7890
+http-proxy = ""
