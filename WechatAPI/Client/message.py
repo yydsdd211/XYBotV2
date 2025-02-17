@@ -338,7 +338,7 @@ class MessageMixin(WechatAPIClientBase):
                 self.error_handler(json_resp)
 
     @staticmethod
-    async def _get_closest_frame_rate(frame_rate: int) -> int:
+    def _get_closest_frame_rate(frame_rate: int) -> int:
         supported = [8000, 12000, 16000, 24000]
         closest_rate = None
         smallest_diff = float('inf')
