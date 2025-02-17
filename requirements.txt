@@ -15,3 +15,7 @@ moviepy~=2.1.2
 pysilk-mod~=1.6.4
 xywechatpad-binary==1.0.1
 pymediainfo~=7.0.1
+matplotlib~=3.10.0
+numpy~=1.26.4
+requests~=2.32.3
+pillow~=10.4.0
