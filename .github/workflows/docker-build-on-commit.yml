@@ -9,6 +9,11 @@ on:
       - 'docker-compose.yml'
       - '**.py'
       - 'requirements.txt'
+      - '**.conf'
+      - '**.toml'
+      - '**.yml'
+      - '.github/workflows/docker-build-on-commit.yml'
+      - '.dockerignore'
 
 jobs:
   build:
