@@ -39,10 +39,3 @@ blacklist = [# 黑名单列表
     "333@chatroom", # 群聊ID
     "444@chatroom"
 ]
-
-# OpenAI格式API设置
-[OpenAI]
-api-key = "sk-xxxx"                    # OpenAI格式API密钥，必须填写有效的API Key
-base-url = "https://api.openai.com/v1" # API接口地址
-# 使用OpanAI官方API填写 https://api.openai.com/v1
-# 使用其他API或者代理API需要修改为对应地址
