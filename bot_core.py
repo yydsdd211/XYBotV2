@@ -3,28 +3,16 @@ import json
 import os
 import time
 import tomllib
-import traceback
 from pathlib import Path
 
 from loguru import logger
 
 import WechatAPI
 from WechatAPI import is_running_in_docker
-from WechatAPI.errors import BanProtection
 from database.database import BotDatabase
 from utils.decorators import scheduler
 from utils.plugin_manager import plugin_manager
 from utils.xybot import XYBot
-
-
-async def handle_message(xybot, msg):
-    """处理单条消息"""
-    try:
-        await xybot.process_message(msg)
-    except BanProtection:
-        logger.warning("登录新设备后4小时内请不要操作以避免风控")
-    except Exception:
-        logger.error(traceback.format_exc())
 
 
 async def bot_core():
@@ -218,9 +206,9 @@ async def bot_core():
             await asyncio.sleep(5)
             continue
 
-        data = data.get("AddMsgs", None)
+        data = data.get("AddMsgs")
         if data:
             for message in data:
-                asyncio.create_task(handle_message(xybot, message))
+                asyncio.create_task(xybot.process_message(message))
         while time.time() - now < 1:
             pass

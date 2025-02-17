@@ -80,7 +80,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "ClientMsgId": client_msg_id, "CreateTime": create_time,
@@ -122,7 +122,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         if at is None:
             at = []
@@ -164,7 +164,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         if bool(image_path) == bool(image_base64):
             raise ValueError("Please provide either image_path or image_base64")
@@ -281,7 +281,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
         elif bool(voice_path) == bool(voice_base64):
             raise ValueError("Please provide either voice_path or voice_base64")
         elif format not in ["amr", "wav", "mp3"]:
@@ -366,7 +366,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Url": url, "Title": title, "Desc": description,
@@ -408,7 +408,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Md5": md5, "TotalLen": total_length}
@@ -446,7 +446,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "CardWxid": card_wxid, "CardAlias": card_alias,
@@ -487,7 +487,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Xml": xml, "Type": type}
@@ -523,7 +523,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": xml}
@@ -558,7 +558,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": xml}
@@ -593,7 +593,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": xml}

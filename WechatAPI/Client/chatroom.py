@@ -21,7 +21,7 @@ class ChatroomMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "Chatroom": chatroom, "InviteWxids": wxid}
@@ -69,7 +69,7 @@ class ChatroomMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "Chatroom": chatroom}
@@ -141,7 +141,7 @@ class ChatroomMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
-            raise BanProtection("登录新设备后4小时内请不要操作以避免风控")
+            raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
         if isinstance(wxid, list):
             wxid = ",".join(wxid)
