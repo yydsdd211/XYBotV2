@@ -176,7 +176,7 @@ class Gomoku(PluginBase):
 
         # 发送棋盘
         board_base64 = self._draw_board(game_id)
-        await bot.send_image_message(room_id, image_base64=board_base64)
+        await bot.send_image_message(room_id, board_base64)
 
         # 设置回合超时
         game['timeout_task'] = asyncio.create_task(
@@ -240,7 +240,7 @@ class Gomoku(PluginBase):
 
         # 绘制并发送新棋盘
         board_base64 = self._draw_board(game_id, highlight=(x, y))
-        await bot.send_image_message(room_id, image_base64=board_base64)
+        await bot.send_image_message(room_id, board_base64)
 
         # 检查是否获胜
         winner = self._check_winner(game_id)

@@ -612,13 +612,13 @@
                             class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">aiohttp</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pymediainfo</span><span class="w"> </span><span
-                            class="kn">import</span> <span class="n">MediaInfo</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pysilk</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span
                             class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydub</span><span class="w"> </span><span
                             class="kn">import</span> <span class="n">AudioSegment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pymediainfo</span><span class="w"> </span><span
+                            class="kn">import</span> <span class="n">MediaInfo</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span
                             class="kn">import</span> <span class="o">*</span>
@@ -744,7 +744,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -790,17 +790,18 @@
         class="nf">send_text_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span
         class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span
         class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span
-        class="n">at</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span
-        class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span
-        class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span
-        class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span
-        class="nb">int</span><span class="p">]:</span>
+        class="n">at</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span
+        class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span
+        class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span
+        class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span
+        class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span
+        class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;发送文本消息。</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            wxid (str): 接收人wxid</span>
 <span class="sd">            content (str): 消息内容</span>
-<span class="sd">            at (list[str], optional): 要@的用户列表. Defaults to None.</span>
+<span class="sd">            at (list, str, optional): 要@的用户</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple[int, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)</span>
@@ -839,14 +840,21 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
-        <span class="k">if</span> <span class="n">at</span> <span class="ow">is</span> <span class="kc">None</span><span
-        class="p">:</span>
-            <span class="n">at</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">at_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span
-        class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">at</span><span
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">at</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">at_str</span> <span class="o">=</span> <span class="n">at</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">at</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">at</span> <span class="ow">is</span> <span
+        class="kc">None</span><span class="p">:</span>
+                <span class="n">at</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">at_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span
+        class="n">join</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Argument &#39;at&#39; should be str or list&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -901,18 +909,17 @@
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span
         class="nf">send_image_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span
         class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span
-        class="n">image_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">image_base64</span><span
-        class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span
-        class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span
-        class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        class="n">image</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span
+        class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span
+        class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span
+        class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span
+        class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span
+        class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;发送图片消息。</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            wxid (str): 接收人wxid</span>
-<span class="sd">            image_path (str, optional): 图片路径，与image_base64二选一. Defaults to &quot;&quot;.</span>
-<span class="sd">            image_base64 (str, optional): 图片base64编码，与image_path二选一. Defaults to &quot;&quot;.</span>
+<span class="sd">            image (str, byte, os.PathLike): 图片，支持base64字符串，图片byte，图片路径</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple[int, int, int]: 返回(ClientImgId, CreateTime, NewMsgId)</span>
@@ -926,18 +933,16 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span
         class="o">.</span><span class="n">_queue_message</span><span class="p">(</span><span class="bp">self</span><span
         class="o">.</span><span class="n">_send_image_message</span><span class="p">,</span> <span class="n">wxid</span><span
-        class="p">,</span> <span class="n">image_path</span><span class="p">,</span> <span class="n">image_base64</span><span
-        class="p">)</span></div>
+        class="p">,</span> <span class="n">image</span><span class="p">)</span></div>
 
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span
         class="nf">_send_image_message</span><span class="p">(</span><span class="bp">self</span><span
         class="p">,</span> <span class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span
-        class="p">,</span> <span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span> <span
-        class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span
-        class="n">image_base64</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span
-        class="nb">tuple</span><span class="p">[</span>
+        class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Union</span><span
+        class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span
+        class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span
+        class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
         <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span
         class="nb">int</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span
@@ -948,23 +953,30 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span
-        class="n">image_path</span><span class="p">)</span> <span class="o">==</span> <span class="nb">bool</span><span
-        class="p">(</span><span class="n">image_base64</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please provide either image_path or image_base64&quot;</span><span
-        class="p">)</span>
-
-        <span class="k">if</span> <span class="n">image_path</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span
-        class="n">image_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span
-        class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">image_base64</span> <span class="o">=</span> <span class="n">base64</span><span
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span
+        class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">image</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">base64</span><span
+        class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">image</span><span
+        class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">image</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span
+        class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">image</span><span
+        class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span
+        class="n">f</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">base64</span><span
         class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span
         class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span
         class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Argument &#39;image&#39; can only be str, bytes, or os.PathLike&quot;</span><span
+        class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
         class="o">.</span><span class="n">ClientSession</span><span class="p">()</span> <span class="k">as</span> <span
@@ -973,7 +985,7 @@
         class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wxid</span><span
         class="p">,</span> <span class="s2">&quot;ToWxid&quot;</span><span class="p">:</span> <span
         class="n">wxid</span><span class="p">,</span> <span class="s2">&quot;Base64&quot;</span><span class="p">:</span> <span
-        class="n">image_base64</span><span class="p">}</span>
+        class="n">image</span><span class="p">}</span>
             <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span
         class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;http://</span><span
         class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ip</span><span
@@ -1005,6 +1017,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="p">(</span><span
         class="n">json_resp</span><span class="p">)</span>
+
 <div class="viewcode-block" id="MessageMixin.send_video_message">
 <a class="viewcode-back" href="../../../index.html#WechatAPI.Client.message.MessageMixin.send_video_message">[文档]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span
@@ -1012,11 +1025,11 @@
         class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span
         class="n">video</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span
         class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span
-        class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span
-        class="n">image</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span
-        class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">os</span><span
-        class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span
-        class="kc">None</span><span class="p">):</span>
+        class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+                                 <span class="n">image</span><span class="p">:</span> <span class="p">[</span><span
+        class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span
+        class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span
+        class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span
         class="sd">&quot;&quot;&quot;发送视频消息。不推荐使用，上传速度很慢300KB/s。如要使用，可压缩视频，或者发送链接卡片而不是视频。</span>
 
@@ -1167,11 +1180,11 @@
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span
         class="nf">send_voice_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span
         class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span
-        class="n">voice_base64</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">voice_path</span><span class="p">:</span> <span
-        class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span
-        class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span
-        class="o">=</span> <span class="s2">&quot;amr&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> \
+        class="n">voice</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span
+        class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span
+        class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span
+        class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
+        class="s2">&quot;amr&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> \
             <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span
         class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span
         class="p">]:</span>
@@ -1179,8 +1192,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            wxid (str): 接收人wxid</span>
-<span class="sd">            voice_base64 (str, optional): 语音base64编码，与voice_path二选一. Defaults to &quot;&quot;.</span>
-<span class="sd">            voice_path (str, optional): 语音文件路径，与voice_base64二选一. Defaults to &quot;&quot;.</span>
+<span class="sd">            voice (str, bytes, os.PathLike): 语音 接受base64字符串，字节，文件路径</span>
 <span class="sd">            format (str, optional): 语音格式，支持amr/wav/mp3. Defaults to &quot;amr&quot;.</span>
 
 <span class="sd">        Returns:</span>
@@ -1195,19 +1207,18 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span
         class="o">.</span><span class="n">_queue_message</span><span class="p">(</span><span class="bp">self</span><span
         class="o">.</span><span class="n">_send_voice_message</span><span class="p">,</span> <span class="n">wxid</span><span
-        class="p">,</span> <span class="n">voice_base64</span><span class="p">,</span> <span class="n">voice_path</span><span
-        class="p">,</span> <span class="nb">format</span><span class="p">)</span></div>
+        class="p">,</span> <span class="n">voice</span><span class="p">,</span> <span class="nb">format</span><span
+        class="p">)</span></div>
 
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span
         class="nf">_send_voice_message</span><span class="p">(</span><span class="bp">self</span><span
         class="p">,</span> <span class="n">wxid</span><span class="p">:</span> <span class="nb">str</span><span
-        class="p">,</span> <span class="n">voice_base64</span><span class="p">:</span> <span class="nb">str</span> <span
-        class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span
-        class="n">voice_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nb">format</span><span
-        class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span
-        class="s2">&quot;amr&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> \
+        class="p">,</span> <span class="n">voice</span><span class="p">:</span> <span class="n">Union</span><span
+        class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span
+        class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span
+        class="p">],</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span
+        class="o">=</span> <span class="s2">&quot;amr&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> \
             <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span
         class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span
         class="p">]:</span>
@@ -1219,12 +1230,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
-        class="p">)</span>
-        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span
-        class="n">voice_path</span><span class="p">)</span> <span class="o">==</span> <span class="nb">bool</span><span
-        class="p">(</span><span class="n">voice_base64</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please provide either voice_path or voice_base64&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
         <span class="k">elif</span> <span class="nb">format</span> <span class="ow">not</span> <span
         class="ow">in</span> <span class="p">[</span><span class="s2">&quot;amr&quot;</span><span
@@ -1233,102 +1239,82 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;format must be one of amr, wav, mp3&quot;</span><span
         class="p">)</span>
 
-        <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;amr&quot;</span><span
-        class="p">:</span>
-            <span class="k">if</span> <span class="n">voice_path</span><span class="p">:</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">voice_path</span><span
-        class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span
-        class="n">f</span><span class="p">:</span>
-                    <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
-        class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span
-        class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span
-        class="p">()</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
-        class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">voice_path</span><span
-        class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;amr&quot;</span><span
+        <span class="c1"># read voice to byte</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">voice</span><span
+        class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">voice_byte</span> <span class="o">=</span> <span class="n">base64</span><span
+        class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">voice</span><span
         class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">voice_base64</span><span class="p">:</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">voice</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">voice_byte</span> <span class="o">=</span> <span class="n">voice</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span
+        class="n">voice</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span
+        class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">voice</span><span
+        class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span
+        class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">voice_byte</span> <span class="o">=</span> <span class="n">f</span><span
+        class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;voice should be str, bytes, or path&quot;</span><span
+        class="p">)</span>
+
+        <span class="c1"># get voice duration and b64</span>
+        <span class="k">if</span> <span class="nb">format</span><span class="o">.</span><span
+        class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span
+        class="s2">&quot;amr&quot;</span><span class="p">:</span>
+            <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
         class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BytesIO</span><span
-        class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span
-        class="p">(</span><span class="n">voice_base64</span><span class="p">)),</span> <span
-        class="nb">format</span><span class="o">=</span><span class="s2">&quot;amr&quot;</span><span class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;wav&quot;</span><span
-        class="p">:</span>
-            <span class="k">if</span> <span class="n">voice_path</span><span class="p">:</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
-        class="o">.</span><span class="n">from_wav</span><span class="p">(</span><span class="n">voice_path</span><span
-        class="p">)</span><span class="o">.</span><span class="n">set_channels</span><span class="p">(</span><span
-        class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">set_frame_rate</span><span
-        class="p">(</span><span class="mi">16000</span><span class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-                <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
+        class="p">(</span><span class="n">voice_byte</span><span class="p">),</span> <span class="nb">format</span><span
+        class="o">=</span><span class="s2">&quot;amr&quot;</span><span class="p">)</span>
+            <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
+        class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">voice_byte</span><span
+        class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">format</span><span class="o">.</span><span
+        class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span
+        class="s2">&quot;wav&quot;</span><span class="p">:</span>
+            <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
+        class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BytesIO</span><span
+        class="p">(</span><span class="n">voice_byte</span><span class="p">),</span> <span class="nb">format</span><span
+        class="o">=</span><span class="s2">&quot;wav&quot;</span><span class="p">)</span><span class="o">.</span><span
+        class="n">set_channels</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">audio</span> <span class="o">=</span> <span class="n">audio</span><span
+        class="o">.</span><span class="n">set_frame_rate</span><span class="p">(</span><span class="bp">self</span><span
+        class="o">.</span><span class="n">_get_closest_frame_rate</span><span class="p">(</span><span
+        class="n">audio</span><span class="o">.</span><span class="n">frame_rate</span><span class="p">))</span>
+            <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
         class="o">.</span><span class="n">b64encode</span><span class="p">(</span>
-                    <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
+                <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
         class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">raw_data</span><span
         class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span
         class="o">.</span><span class="n">frame_rate</span><span class="p">))</span><span class="o">.</span><span
         class="n">decode</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">voice_base64</span><span class="p">:</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
-        class="o">.</span><span class="n">from_wav</span><span class="p">(</span><span class="n">BytesIO</span><span
-        class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span
-        class="p">(</span><span class="n">voice_base64</span><span class="p">)))</span><span class="o">.</span><span
-        class="n">set_channels</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span
-        class="o">.</span><span class="n">set_frame_rate</span><span class="p">(</span>
-                    <span class="mi">16000</span><span class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-                <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
+        <span class="k">elif</span> <span class="nb">format</span><span class="o">.</span><span
+        class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span
+        class="s2">&quot;mp3&quot;</span><span class="p">:</span>
+            <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
+        class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BytesIO</span><span
+        class="p">(</span><span class="n">voice_byte</span><span class="p">),</span> <span class="nb">format</span><span
+        class="o">=</span><span class="s2">&quot;mp3&quot;</span><span class="p">)</span><span class="o">.</span><span
+        class="n">set_channels</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">audio</span> <span class="o">=</span> <span class="n">audio</span><span
+        class="o">.</span><span class="n">set_frame_rate</span><span class="p">(</span><span class="bp">self</span><span
+        class="o">.</span><span class="n">_get_closest_frame_rate</span><span class="p">(</span><span
+        class="n">audio</span><span class="o">.</span><span class="n">frame_rate</span><span class="p">))</span>
+            <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
         class="o">.</span><span class="n">b64encode</span><span class="p">(</span>
-                    <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
-        class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">raw_data</span><span
-        class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span
-        class="o">.</span><span class="n">frame_rate</span><span class="p">))</span><span class="o">.</span><span
-        class="n">decode</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;mp3&quot;</span><span
-        class="p">:</span>
-            <span class="k">if</span> <span class="n">voice_path</span><span class="p">:</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
-        class="o">.</span><span class="n">from_mp3</span><span class="p">(</span><span class="n">voice_path</span><span
-        class="p">)</span><span class="o">.</span><span class="n">set_channels</span><span class="p">(</span><span
-        class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">set_frame_rate</span><span
-        class="p">(</span><span class="mi">16000</span><span class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-                <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
-        class="o">.</span><span class="n">b64encode</span><span class="p">(</span>
-                    <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
-        class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">raw_data</span><span
-        class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span
-        class="o">.</span><span class="n">frame_rate</span><span class="p">))</span><span class="o">.</span><span
-        class="n">decode</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">voice_base64</span><span class="p">:</span>
-                <span class="n">audio</span> <span class="o">=</span> <span class="n">AudioSegment</span><span
-        class="o">.</span><span class="n">from_mp3</span><span class="p">(</span><span class="n">BytesIO</span><span
-        class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span
-        class="p">(</span><span class="n">voice_base64</span><span class="p">)))</span><span class="o">.</span><span
-        class="n">set_channels</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span
-        class="o">.</span><span class="n">set_frame_rate</span><span class="p">(</span>
-                    <span class="mi">16000</span><span class="p">)</span>
-                <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
-        class="p">(</span><span class="n">audio</span><span class="p">)</span>
-                <span class="n">voice_base64</span> <span class="o">=</span> <span class="n">base64</span><span
-        class="o">.</span><span class="n">b64encode</span><span class="p">(</span>
-                    <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
+                <span class="k">await</span> <span class="n">pysilk</span><span class="o">.</span><span class="n">async_encode</span><span
         class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">raw_data</span><span
         class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span
         class="o">.</span><span class="n">frame_rate</span><span class="p">))</span><span class="o">.</span><span
         class="n">decode</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please provide either voice_path or voice_base64&quot;</span><span
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;format must be one of amr, wav, mp3&quot;</span><span
         class="p">)</span>
+
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span
+        class="p">(</span><span class="n">audio</span><span class="p">)</span>
 
         <span class="n">format_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;amr&quot;</span><span
         class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span
@@ -1379,6 +1365,28 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="p">(</span><span
         class="n">json_resp</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_get_closest_frame_rate</span><span
+        class="p">(</span><span class="n">frame_rate</span><span class="p">:</span> <span class="nb">int</span><span
+        class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">supported</span> <span class="o">=</span> <span class="p">[</span><span
+        class="mi">8000</span><span class="p">,</span> <span class="mi">12000</span><span class="p">,</span> <span
+        class="mi">16000</span><span class="p">,</span> <span class="mi">24000</span><span class="p">]</span>
+        <span class="n">closest_rate</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">smallest_diff</span> <span class="o">=</span> <span class="nb">float</span><span
+        class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span
+        class="n">supported</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span
+        class="p">(</span><span class="n">frame_rate</span> <span class="o">-</span> <span class="n">num</span><span
+        class="p">)</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;</span> <span class="n">smallest_diff</span><span
+        class="p">:</span>
+                <span class="n">smallest_diff</span> <span class="o">=</span> <span class="n">diff</span>
+                <span class="n">closest_rate</span> <span class="o">=</span> <span class="n">num</span>
+
+        <span class="k">return</span> <span class="n">closest_rate</span>
 
 <div class="viewcode-block" id="MessageMixin.send_link_message">
 <a class="viewcode-back" href="../../../index.html#WechatAPI.Client.message.MessageMixin.send_link_message">[文档]</a>
@@ -1441,7 +1449,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1539,7 +1547,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1630,7 +1638,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1731,7 +1739,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1824,7 +1832,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1908,7 +1916,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
@@ -1991,7 +1999,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span

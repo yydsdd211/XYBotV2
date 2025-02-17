@@ -97,13 +97,13 @@ class MessageMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def send_text_message(self, wxid: str, content: str, at: list[str] = None) -> tuple[int, int, int]:
+    async def send_text_message(self, wxid: str, content: str, at: Union[list, str] = "") -> tuple[int, int, int]:
         """发送文本消息。
 
         Args:
             wxid (str): 接收人wxid
             content (str): 消息内容
-            at (list[str], optional): 要@的用户列表. Defaults to None.
+            at (list, str, optional): 要@的用户
 
         Returns:
             tuple[int, int, int]: 返回(ClientMsgid, CreateTime, NewMsgId)
@@ -124,9 +124,14 @@ class MessageMixin(WechatAPIClientBase):
         elif not self.ignore_protect and protector.check(14400):
             raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
-        if at is None:
-            at = []
-        at_str = ",".join(at)
+        if isinstance(at, str):
+            at_str = at
+        elif isinstance(at, list):
+            if at is None:
+                at = []
+            at_str = ",".join(at)
+        else:
+            raise ValueError("Argument 'at' should be str or list")
 
         async with aiohttp.ClientSession() as session:
             json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Content": content, "Type": 1, "At": at_str}
@@ -140,13 +145,12 @@ class MessageMixin(WechatAPIClientBase):
             else:
                 self.error_handler(json_resp)
 
-    async def send_image_message(self, wxid: str, image_path: str = "", image_base64: str = "") -> tuple[int, int, int]:
+    async def send_image_message(self, wxid: str, image: Union[str, bytes, os.PathLike]) -> tuple[int, int, int]:
         """发送图片消息。
 
         Args:
             wxid (str): 接收人wxid
-            image_path (str, optional): 图片路径，与image_base64二选一. Defaults to "".
-            image_base64 (str, optional): 图片base64编码，与image_path二选一. Defaults to "".
+            image (str, byte, os.PathLike): 图片，支持base64字符串，图片byte，图片路径
 
         Returns:
             tuple[int, int, int]: 返回(ClientImgId, CreateTime, NewMsgId)
@@ -157,24 +161,27 @@ class MessageMixin(WechatAPIClientBase):
             ValueError: image_path和image_base64都为空或都不为空时
             根据error_handler处理错误
         """
-        return await self._queue_message(self._send_image_message, wxid, image_path, image_base64)
+        return await self._queue_message(self._send_image_message, wxid, image)
 
-    async def _send_image_message(self, wxid: str, image_path: str = "", image_base64: str = "") -> tuple[
+    async def _send_image_message(self, wxid: str, image: Union[str, bytes, os.PathLike]) -> tuple[
         int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
             raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
 
-        if bool(image_path) == bool(image_base64):
-            raise ValueError("Please provide either image_path or image_base64")
-
-        if image_path:
-            with open(image_path, 'rb') as f:
-                image_base64 = base64.b64encode(f.read()).decode()
+        if isinstance(image, str):
+            pass
+        elif isinstance(image, bytes):
+            image = base64.b64encode(image).decode()
+        elif isinstance(image, os.PathLike):
+            with open(image, 'rb') as f:
+                image = base64.b64encode(f.read()).decode()
+        else:
+            raise ValueError("Argument 'image' can only be str, bytes, or os.PathLike")
 
         async with aiohttp.ClientSession() as session:
-            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Base64": image_base64}
+            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Base64": image}
             response = await session.post(f'http://{self.ip}:{self.port}/SendImageMsg', json=json_param)
             json_resp = await response.json()
 
@@ -255,14 +262,13 @@ class MessageMixin(WechatAPIClientBase):
         else:
             self.error_handler(json_resp)
 
-    async def send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
+    async def send_voice_message(self, wxid: str, voice: Union[str, bytes, os.PathLike], format: str = "amr") -> \
             tuple[int, int, int]:
         """发送语音消息。
 
         Args:
             wxid (str): 接收人wxid
-            voice_base64 (str, optional): 语音base64编码，与voice_path二选一. Defaults to "".
-            voice_path (str, optional): 语音文件路径，与voice_base64二选一. Defaults to "".
+            voice (str, bytes, os.PathLike): 语音 接受base64字符串，字节，文件路径
             format (str, optional): 语音格式，支持amr/wav/mp3. Defaults to "amr".
 
         Returns:
@@ -274,55 +280,46 @@ class MessageMixin(WechatAPIClientBase):
             ValueError: voice_path和voice_base64都为空或都不为空时，或format不支持时
             根据error_handler处理错误
         """
-        return await self._queue_message(self._send_voice_message, wxid, voice_base64, voice_path, format)
+        return await self._queue_message(self._send_voice_message, wxid, voice, format)
 
-    async def _send_voice_message(self, wxid: str, voice_base64: str = "", voice_path: str = "", format: str = "amr") -> \
+    async def _send_voice_message(self, wxid: str, voice: Union[str, bytes, os.PathLike], format: str = "amr") -> \
             tuple[int, int, int]:
         if not self.wxid:
             raise UserLoggedOut("请先登录")
         elif not self.ignore_protect and protector.check(14400):
             raise BanProtection("风控保护: 新设备登录后4小时内请挂机")
-        elif bool(voice_path) == bool(voice_base64):
-            raise ValueError("Please provide either voice_path or voice_base64")
         elif format not in ["amr", "wav", "mp3"]:
             raise ValueError("format must be one of amr, wav, mp3")
 
-        duration = 0
-        if format == "amr":
-            if voice_path:
-                with open(voice_path, 'rb') as f:
-                    voice_base64 = base64.b64encode(f.read()).decode()
-                audio = AudioSegment.from_file(voice_path, format="amr")
-                duration = len(audio)
-            elif voice_base64:
-                audio = AudioSegment.from_file(BytesIO(base64.b64decode(voice_base64)), format="amr")
-                duration = len(audio)
-        elif format == "wav":
-            if voice_path:
-                audio = AudioSegment.from_wav(voice_path).set_channels(1).set_frame_rate(16000)
-                duration = len(audio)
-                voice_base64 = base64.b64encode(
-                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
-            elif voice_base64:
-                audio = AudioSegment.from_wav(BytesIO(base64.b64decode(voice_base64))).set_channels(1).set_frame_rate(
-                    16000)
-                duration = len(audio)
-                voice_base64 = base64.b64encode(
-                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
-        elif format == "mp3":
-            if voice_path:
-                audio = AudioSegment.from_mp3(voice_path).set_channels(1).set_frame_rate(16000)
-                duration = len(audio)
-                voice_base64 = base64.b64encode(
-                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
-            elif voice_base64:
-                audio = AudioSegment.from_mp3(BytesIO(base64.b64decode(voice_base64))).set_channels(1).set_frame_rate(
-                    16000)
-                duration = len(audio)
-                voice_base64 = base64.b64encode(
-                    await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+        # read voice to byte
+        if isinstance(voice, str):
+            voice_byte = base64.b64decode(voice)
+        elif isinstance(voice, bytes):
+            voice_byte = voice
+        elif isinstance(voice, os.PathLike):
+            with open(voice, "rb") as f:
+                voice_byte = f.read()
         else:
-            raise ValueError("Please provide either voice_path or voice_base64")
+            raise ValueError("voice should be str, bytes, or path")
+
+        # get voice duration and b64
+        if format.lower() == "amr":
+            audio = AudioSegment.from_file(BytesIO(voice_byte), format="amr")
+            voice_base64 = base64.b64encode(voice_byte).decode()
+        elif format.lower() == "wav":
+            audio = AudioSegment.from_file(BytesIO(voice_byte), format="wav").set_channels(1)
+            audio = audio.set_frame_rate(self._get_closest_frame_rate(audio.frame_rate))
+            voice_base64 = base64.b64encode(
+                await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+        elif format.lower() == "mp3":
+            audio = AudioSegment.from_file(BytesIO(voice_byte), format="mp3").set_channels(1)
+            audio = audio.set_frame_rate(self._get_closest_frame_rate(audio.frame_rate))
+            voice_base64 = base64.b64encode(
+                await pysilk.async_encode(audio.raw_data, sample_rate=audio.frame_rate)).decode()
+        else:
+            raise ValueError("format must be one of amr, wav, mp3")
+
+        duration = len(audio)
 
         format_dict = {"amr": 0, "wav": 4, "mp3": 4}
 
@@ -339,6 +336,19 @@ class MessageMixin(WechatAPIClientBase):
                 return int(data.get("ClientMsgId")), data.get("CreateTime"), data.get("NewMsgId")
             else:
                 self.error_handler(json_resp)
+
+    @staticmethod
+    async def _get_closest_frame_rate(frame_rate: int) -> int:
+        supported = [8000, 12000, 16000, 24000]
+        closest_rate = None
+        smallest_diff = float('inf')
+        for num in supported:
+            diff = abs(frame_rate - num)
+            if diff < smallest_diff:
+                smallest_diff = diff
+                closest_rate = num
+
+        return closest_rate
 
     async def send_link_message(self, wxid: str, url: str, title: str = "", description: str = "",
                                 thumb_url: str = "") -> tuple[str, int, int]:

@@ -87,7 +87,7 @@ class Warthunder(PluginBase):
 
         image = await self.generate_card(data["data"])
 
-        await bot.send_image_message(message["FromWxid"], image_base64=bot.byte_to_base64(image))
+        await bot.send_image_message(message["FromWxid"], image)
         await bot.revoke_message(message["FromWxid"], a, b, c)
 
     async def generate_card(self, data: dict):

@@ -848,7 +848,7 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            UserLoggedOut: 未登录时调用</span>
-<span class="sd">            BanProtection: 登录新设备后4小时内请不要操作以避免风控</span>
+<span class="sd">            BanProtection: 风控保护: 新设备登录后4小时内请挂机</span>
 <span class="sd">            根据error_handler处理错误</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span
@@ -859,7 +859,7 @@
         class="o">.</span><span class="n">ignore_protect</span> <span class="ow">and</span> <span
         class="n">protector</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span
         class="mi">14400</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;登录新设备后4小时内请不要操作以避免风控&quot;</span><span
+            <span class="k">raise</span> <span class="n">BanProtection</span><span class="p">(</span><span class="s2">&quot;风控保护: 新设备登录后4小时内请挂机&quot;</span><span
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span

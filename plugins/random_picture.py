@@ -48,8 +48,7 @@ class RandomPicture(PluginBase):
 
             await conn_ssl.close()
 
-            pic = bot.byte_to_base64(content)
-            await bot.send_image_message(message["FromWxid"], image_base64=pic)
+            await bot.send_image_message(message["FromWxid"], image=content)
 
         except Exception as error:
             out_message = f"-----XYBot-----\n出现错误❌！\n{error}"

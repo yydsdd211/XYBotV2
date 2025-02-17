@@ -58,7 +58,7 @@ class News(PluginBase):
             async with aiohttp.ClientSession() as session:
                 async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
                     image_byte = await resp.read()
-            await bot.send_image_message(message["FromWxid"], image_base64=bot.byte_to_base64(image_byte))
+            await bot.send_image_message(message["FromWxid"], image_byte)
 
     @schedule('cron', hour=12)
     async def noon_news(self, bot: WechatAPIClient):
@@ -81,10 +81,8 @@ class News(PluginBase):
             async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
                 iamge_byte = await resp.read()
 
-        image_base64 = bot.byte_to_base64(iamge_byte)
-
         for id in chatrooms:
-            await bot.send_image_message(id, image_base64=image_base64)
+            await bot.send_image_message(id, iamge_byte)
             await asyncio.sleep(2)
 
     @schedule('cron', hour=18)
@@ -108,8 +106,6 @@ class News(PluginBase):
             async with session.get("https://v.api.aa1.cn/api/60s-v3/?cc=XYBot") as resp:
                 iamge_byte = await resp.read()
 
-        image_base64 = bot.byte_to_base64(iamge_byte)
-
         for id in chatrooms:
-            await bot.send_image_message(id, image_base64=image_base64)
+            await bot.send_image_message(id, iamge_byte)
             await asyncio.sleep(2)

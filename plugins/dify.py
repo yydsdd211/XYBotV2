@@ -253,16 +253,11 @@ class Dify(PluginBase):
             file = await self.download_file(url)
             extension = filetype.guess_extension(file)
             if extension in ('wav', 'mp3'):
-                await bot.send_voice_message(message["FromWxid"],
-                                             voice_base64=bot.byte_to_base64(file),
-                                             format=filetype.guess_extension(file))
+                await bot.send_voice_message(message["FromWxid"], voice=file, format=filetype.guess_extension(file))
             elif extension in ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'):
-                await bot.send_image_message(message["FromWxid"],
-                                             image_base64=bot.byte_to_base64(file))
+                await bot.send_image_message(message["FromWxid"], file)
             elif extension in ('mp4', 'avi', 'mov', 'mkv', 'flv'):
-                await bot.send_video_message(message["FromWxid"],
-                                             video_base64=bot.byte_to_base64(file),
-                                             image_base64="None")
+                await bot.send_video_message(message["FromWxid"], video=file, image="None")
 
         pattern = r'\[[^\]]+\]\(https?:\/\/[^\s\)]+\)'
         text = re.sub(pattern, '', text)
@@ -282,11 +277,12 @@ class Dify(PluginBase):
         elif isinstance(image, bytes):
             image = bot.byte_to_base64(image)
 
-        await bot.send_image_message(message["FromWxid"], image_base64=image)
+        await bot.send_image_message(message["FromWxid"], image)
 
     @staticmethod
     async def dify_handle_audio(bot: WechatAPIClient, message: dict, audio: str):
-        await bot.send_voice_message(message["FromWxid"], voice_base64=audio)
+
+        await bot.send_voice_message(message["FromWxid"], audio)
 
     @staticmethod
     async def dify_handle_error(bot: WechatAPIClient, message: dict, task_id: str, message_id: str, status: str,

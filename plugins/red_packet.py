@@ -159,7 +159,7 @@ class RedPacket(PluginBase):
         )
 
         await bot.send_text_message(from_wxid, text_content)
-        await bot.send_image_message(from_wxid, image_base64=image_base64)
+        await bot.send_image_message(from_wxid, image_base64)
 
     async def grab_red_packet(self, bot: WechatAPIClient, message: dict, command: list):
         grabber_wxid = message["SenderWxid"]

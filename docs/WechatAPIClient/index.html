@@ -1868,19 +1868,14 @@
                                                 class="pre">wxid</span></span><span class="p"><span class="pre">:</span></span><span
                                                 class="w"> </span><span class="n"><span
                                                 class="pre">str</span></span></em>, <em class="sig-param"><span
-                                                class="n"><span class="pre">image_path</span></span><span
-                                                class="p"><span class="pre">:</span></span><span class="w"> </span><span
-                                                class="n"><span class="pre">str</span></span><span
-                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
-                                                class="w"> </span><span class="default_value"><span
-                                                class="pre">''</span></span></em>, <em class="sig-param"><span
-                                                class="n"><span class="pre">image_base64</span></span><span
-                                                class="p"><span class="pre">:</span></span><span class="w"> </span><span
-                                                class="n"><span class="pre">str</span></span><span
-                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
-                                                class="w"> </span><span class="default_value"><span
-                                                class="pre">''</span></span></em><span class="sig-paren">)</span> <span
-                                                class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span
+                                                class="n"><span class="pre">image</span></span><span class="p"><span
+                                                class="pre">:</span></span><span class="w"> </span><span class="n"><span
+                                                class="pre">str</span><span class="w"> </span><span class="p"><span
+                                                class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span
+                                                class="w"> </span><span class="p"><span class="pre">|</span></span><span
+                                                class="w"> </span><span class="pre">PathLike</span></span></em><span
+                                                class="sig-paren">)</span> <span class="sig-return"><span
+                                                class="sig-return-icon">&#x2192;</span> <span
                                                 class="sig-return-typehint"><span class="pre">tuple</span><span
                                                 class="p"><span class="pre">[</span></span><span
                                                 class="pre">int</span><span class="p"><span
@@ -1901,13 +1896,9 @@
                                                     <ul class="simple">
                                                         <li><p><strong>wxid</strong> (<em>str</em>) -- 接收人wxid</p>
                                                         </li>
-                                                        <li><p><strong>image_path</strong> (<em>str</em><em>, </em><em>optional</em>)
-                                                            -- 图片路径，与image_base64二选一. Defaults to &quot;&quot;.
-                                                        </p></li>
-                                                        <li><p><strong>image_base64</strong>
-                                                            (<em>str</em><em>, </em><em>optional</em>) --
-                                                            图片base64编码，与image_path二选一. Defaults to &quot;&quot;.
-                                                        </p></li>
+                                                        <li><p><strong>image</strong>
+                                                            (<em>str</em><em>, </em><em>byte</em><em>, </em><em>os.PathLike</em>)
+                                                            -- 图片，支持base64字符串，图片byte，图片路径</p></li>
                                                     </ul>
                                                 </dd>
                                                 <dt class="field-even">返回<span class="colon">:</span></dt>
@@ -2026,20 +2017,20 @@
                                                 class="pre">str</span></span></em>, <em class="sig-param"><span
                                                 class="n"><span class="pre">at</span></span><span class="p"><span
                                                 class="pre">:</span></span><span class="w"> </span><span class="n"><span
-                                                class="pre">list</span><span class="p"><span class="pre">[</span></span><span
-                                                class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span
-                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
-                                                class="w"> </span><span class="default_value"><span
-                                                class="pre">None</span></span></em><span class="sig-paren">)</span>
-                                            <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span
-                                                    class="sig-return-typehint"><span class="pre">tuple</span><span
-                                                    class="p"><span class="pre">[</span></span><span
-                                                    class="pre">int</span><span class="p"><span
-                                                    class="pre">,</span></span><span class="w"> </span><span
-                                                    class="pre">int</span><span class="p"><span
-                                                    class="pre">,</span></span><span class="w"> </span><span
-                                                    class="pre">int</span><span class="p"><span
-                                                    class="pre">]</span></span></span></span><a
+                                                class="pre">list</span><span class="w"> </span><span class="p"><span
+                                                class="pre">|</span></span><span class="w"> </span><span
+                                                class="pre">str</span></span><span class="w"> </span><span
+                                                class="o"><span class="pre">=</span></span><span class="w"> </span><span
+                                                class="default_value"><span class="pre">''</span></span></em><span
+                                                class="sig-paren">)</span> <span class="sig-return"><span
+                                                class="sig-return-icon">&#x2192;</span> <span
+                                                class="sig-return-typehint"><span class="pre">tuple</span><span
+                                                class="p"><span class="pre">[</span></span><span
+                                                class="pre">int</span><span class="p"><span
+                                                class="pre">,</span></span><span class="w"> </span><span
+                                                class="pre">int</span><span class="p"><span
+                                                class="pre">,</span></span><span class="w"> </span><span
+                                                class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a
                                                 class="reference internal"
                                                 href="_modules/WechatAPI/Client/message.html#MessageMixin.send_text_message"><span
                                                 class="viewcode-link"><span class="pre">[源代码]</span></span></a><a
@@ -2055,9 +2046,8 @@
                                                         </li>
                                                         <li><p><strong>content</strong> (<em>str</em>) -- 消息内容</p>
                                                         </li>
-                                                        <li><p><strong>at</strong>
-                                                            (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>)
-                                                            -- 要&#64;的用户列表. Defaults to None.</p></li>
+                                                        <li><p><strong>at</strong> (<em>list</em><em>, </em><em>str</em><em>, </em><em>optional</em>)
+                                                            -- 要&#64;的用户</p></li>
                                                     </ul>
                                                 </dd>
                                                 <dt class="field-even">返回<span class="colon">:</span></dt>
@@ -2152,32 +2142,27 @@
                                                 class="pre">wxid</span></span><span class="p"><span class="pre">:</span></span><span
                                                 class="w"> </span><span class="n"><span
                                                 class="pre">str</span></span></em>, <em class="sig-param"><span
-                                                class="n"><span class="pre">voice_base64</span></span><span
-                                                class="p"><span class="pre">:</span></span><span class="w"> </span><span
-                                                class="n"><span class="pre">str</span></span><span
-                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
-                                                class="w"> </span><span class="default_value"><span
-                                                class="pre">''</span></span></em>, <em class="sig-param"><span
-                                                class="n"><span class="pre">voice_path</span></span><span
-                                                class="p"><span class="pre">:</span></span><span class="w"> </span><span
-                                                class="n"><span class="pre">str</span></span><span
-                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
-                                                class="w"> </span><span class="default_value"><span
-                                                class="pre">''</span></span></em>, <em class="sig-param"><span
-                                                class="n"><span class="pre">format</span></span><span class="p"><span
+                                                class="n"><span class="pre">voice</span></span><span class="p"><span
                                                 class="pre">:</span></span><span class="w"> </span><span class="n"><span
-                                                class="pre">str</span></span><span class="w"> </span><span
-                                                class="o"><span class="pre">=</span></span><span class="w"> </span><span
-                                                class="default_value"><span class="pre">'amr'</span></span></em><span
-                                                class="sig-paren">)</span> <span class="sig-return"><span
-                                                class="sig-return-icon">&#x2192;</span> <span
-                                                class="sig-return-typehint"><span class="pre">tuple</span><span
-                                                class="p"><span class="pre">[</span></span><span
-                                                class="pre">int</span><span class="p"><span
-                                                class="pre">,</span></span><span class="w"> </span><span
-                                                class="pre">int</span><span class="p"><span
-                                                class="pre">,</span></span><span class="w"> </span><span
-                                                class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a
+                                                class="pre">str</span><span class="w"> </span><span class="p"><span
+                                                class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span
+                                                class="w"> </span><span class="p"><span class="pre">|</span></span><span
+                                                class="w"> </span><span class="pre">PathLike</span></span></em>, <em
+                                                class="sig-param"><span class="n"><span class="pre">format</span></span><span
+                                                class="p"><span class="pre">:</span></span><span class="w"> </span><span
+                                                class="n"><span class="pre">str</span></span><span
+                                                class="w"> </span><span class="o"><span class="pre">=</span></span><span
+                                                class="w"> </span><span class="default_value"><span
+                                                class="pre">'amr'</span></span></em><span class="sig-paren">)</span>
+                                            <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span
+                                                    class="sig-return-typehint"><span class="pre">tuple</span><span
+                                                    class="p"><span class="pre">[</span></span><span
+                                                    class="pre">int</span><span class="p"><span
+                                                    class="pre">,</span></span><span class="w"> </span><span
+                                                    class="pre">int</span><span class="p"><span
+                                                    class="pre">,</span></span><span class="w"> </span><span
+                                                    class="pre">int</span><span class="p"><span
+                                                    class="pre">]</span></span></span></span><a
                                                 class="reference internal"
                                                 href="_modules/WechatAPI/Client/message.html#MessageMixin.send_voice_message"><span
                                                 class="viewcode-link"><span class="pre">[源代码]</span></span></a><a
@@ -2191,13 +2176,9 @@
                                                     <ul class="simple">
                                                         <li><p><strong>wxid</strong> (<em>str</em>) -- 接收人wxid</p>
                                                         </li>
-                                                        <li><p><strong>voice_base64</strong>
-                                                            (<em>str</em><em>, </em><em>optional</em>) --
-                                                            语音base64编码，与voice_path二选一. Defaults to &quot;&quot;.
-                                                        </p></li>
-                                                        <li><p><strong>voice_path</strong> (<em>str</em><em>, </em><em>optional</em>)
-                                                            -- 语音文件路径，与voice_base64二选一. Defaults to &quot;&quot;.
-                                                        </p></li>
+                                                        <li><p><strong>voice</strong>
+                                                            (<em>str</em><em>, </em><em>bytes</em><em>, </em><em>os.PathLike</em>)
+                                                            -- 语音 接受base64字符串，字节，文件路径</p></li>
                                                         <li><p><strong>format</strong> (<em>str</em><em>, </em><em>optional</em>)
                                                             -- 语音格式，支持amr/wav/mp3. Defaults to &quot;amr&quot;.
                                                         </p></li>
@@ -2324,7 +2305,7 @@
                                                 <dd class="field-even">
                                                     <ul class="simple">
                                                         <li><p><strong>UserLoggedOut</strong> -- 未登录时调用</p></li>
-                                                        <li><p><strong>BanProtection</strong> -- 登录新设备后4小时内请不要操作以避免风控
+                                                        <li><p><strong>BanProtection</strong> -- 风控保护: 新设备登录后4小时内请挂机
                                                         </p></li>
                                                         <li><p><strong>根据error_handler处理错误</strong> -- </p></li>
                                                     </ul>
@@ -3634,7 +3615,7 @@
                                                 <dd class="field-even">
                                                     <ul class="simple">
                                                         <li><p><strong>UserLoggedOut</strong> -- 未登录时调用</p></li>
-                                                        <li><p><strong>BanProtection</strong> -- 登录新设备后4小时内请不要操作以避免风控
+                                                        <li><p><strong>BanProtection</strong> -- 风控保护: 新设备登录后4小时内请挂机
                                                         </p></li>
                                                         <li><p><strong>根据error_handler处理错误</strong> -- </p></li>
                                                     </ul>
