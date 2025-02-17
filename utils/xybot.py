@@ -5,7 +5,6 @@ from typing import Dict, Any
 from loguru import logger
 
 from WechatAPI import WechatAPIClient
-from WechatAPI.Client import protector
 from utils.event_manager import EventManager
 
 
@@ -24,8 +23,6 @@ class XYBot:
         self.whitelist = main_config.get("XYBot", {}).get("whitelist", [])
         self.blacklist = main_config.get("XYBot", {}).get("blacklist", [])
 
-        self.protect_msg_sent = False
-
     def update_profile(self, wxid: str, nickname: str, alias: str, phone: str):
         """更新机器人信息"""
         self.wxid = wxid
@@ -35,11 +32,6 @@ class XYBot:
 
     async def process_message(self, message: Dict[str, Any]):
         """处理接收到的消息"""
-        if protector.check(14400):
-            if not self.protect_msg_sent:
-                logger.warning("登录新设备后4小时内请不要操作以避免风控")
-                self.protect_msg_sent = True
-            return
 
         msg_type = message.get("MsgType")
 
