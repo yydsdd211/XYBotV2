@@ -411,7 +411,7 @@ class XYBot:
                     message["MsgId"],
                     message["FromWxid"],
                     message["SenderWxid"],
-                    message["Content"])
+                    str(message["Content"]).replace("\n", ""))
 
         message["Video"] = await self.bot.download_video(message["MsgId"])
 
