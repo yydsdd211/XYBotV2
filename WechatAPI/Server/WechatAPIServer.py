@@ -71,16 +71,3 @@ class WechatAPIServer:
             if not line:
                 break
             logger.info(line.decode("utf-8").strip())
-
-
-def is_running_in_docker():
-    """检查是否在 Docker 容器中运行"""
-    # 添加日志输出来调试
-    try:
-        with open('/proc/1/cgroup', 'r') as f:
-            content = f.read()
-            is_docker = 'docker' in content or 'kubepods' in content
-            logger.debug("Docker 检测结果: {}", is_docker)
-            return is_docker
-    except:
-        return False

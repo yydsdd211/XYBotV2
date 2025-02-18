@@ -8,7 +8,6 @@ from pathlib import Path
 from loguru import logger
 
 import WechatAPI
-from WechatAPI import is_running_in_docker
 from database.database import BotDatabase
 from utils.decorators import scheduler
 from utils.plugin_manager import plugin_manager
@@ -29,22 +28,18 @@ async def bot_core():
     # 启动WechatAPI服务
     server = WechatAPI.WechatAPIServer()
     api_config = main_config.get("WechatAPIServer", {})
-    redis_host = os.getenv("REDIS_HOST", api_config.get("redis-host"))
-    logger.debug("最终使用的 Redis 主机地址: {}", redis_host)
+    redis_host = api_config.get("redis-host", "127.0.0.1")
+    redis_port = api_config.get("redis-port", 6379)
+    logger.debug("Redis 主机地址: {}:{}", redis_host, redis_port)
     server.start(port=api_config.get("port", 9000),
                  mode=api_config.get("mode", "release"),
                  redis_host=redis_host,
-                 redis_port=api_config.get("redis-port", 6379),
+                 redis_port=redis_port,
                  redis_password=api_config.get("redis-password", ""),
                  redis_db=api_config.get("redis-db", 0))
 
     # 实例化WechatAPI客户端
-    if is_running_in_docker():  # 傻逼DNS
-        ip = "localhost"
-    else:
-        ip = "127.0.0.1"
-
-    bot = WechatAPI.WechatAPIClient(ip, api_config.get("port", 9000))
+    bot = WechatAPI.WechatAPIClient("127.0.0.1", api_config.get("port", 9000))
     bot.ignore_protect = main_config.get("XYBot", {}).get("ignore-protection", False)
 
     # 等待WechatAPI服务启动
@@ -59,7 +54,7 @@ async def bot_core():
         return
 
     if not await bot.check_database():
-        logger.error("Redis或Dragonfly连接失败，请检查Redis或Dragonfly是否在运行中，Redis或Dragonfly的配置")
+        logger.error("Redis连接失败，请检查Redis是否在运行中，Redis的配置")
         return
 
     logger.success("WechatAPI服务已启动")
