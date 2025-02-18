@@ -1,10 +1,9 @@
-import asyncio
 import copy
 from typing import Callable, Dict, List
 
 
 class EventManager:
-    _handlers: Dict[str, List[tuple[Callable, object]]] = {}
+    _handlers: Dict[str, List[tuple[Callable, object, int, bool]]] = {}
 
     @classmethod
     def bind_instance(cls, instance: object):
@@ -13,9 +12,14 @@ class EventManager:
             method = getattr(instance, method_name)
             if hasattr(method, '_event_type'):
                 event_type = getattr(method, '_event_type')
+                priority = getattr(method, '_priority', 0)
+                block = getattr(method, '_block', False)
+                
                 if event_type not in cls._handlers:
                     cls._handlers[event_type] = []
-                cls._handlers[event_type].append((method, instance))
+                cls._handlers[event_type].append((method, instance, priority, block))
+                # 按优先级排序，优先级高的在前
+                cls._handlers[event_type].sort(key=lambda x: x[2], reverse=True)
 
     @classmethod
     async def emit(cls, event_type: str, *args, **kwargs) -> None:
@@ -24,18 +28,22 @@ class EventManager:
             return
 
         api_client, message = args
-        for handler, instance in cls._handlers[event_type]:
+        for handler, instance, priority, block in cls._handlers[event_type]:
             # 只对 message 进行深拷贝，api_client 保持不变
             handler_args = (api_client, copy.deepcopy(message))
             new_kwargs = {k: copy.deepcopy(v) for k, v in kwargs.items()}
 
-            asyncio.create_task(handler(*handler_args, **new_kwargs))  # 异步执行
+            await handler(*handler_args, **new_kwargs)
+
+            if block:  # 如果handler设置了block=True，则不再继续执行其他handler
+                break
 
     @classmethod
     def unbind_instance(cls, instance: object):
         """解绑实例的所有事件处理函数"""
         for event_type in cls._handlers:
             cls._handlers[event_type] = [
-                (handler, inst) for handler, inst in cls._handlers[event_type]
+                (handler, inst, priority, block)
+                for handler, inst, priority, block in cls._handlers[event_type]
                 if inst is not instance
             ]
