@@ -46,7 +46,6 @@ def add_job_safe(scheduler: AsyncIOScheduler, job_id: str, func: Callable, bot,
         scheduler.remove_job(job_id)
     except:
         pass
-    # Pass bot as first argument to the scheduled function
     scheduler.add_job(func, trigger, args=[bot], id=job_id, **trigger_args)
 
 
@@ -58,175 +57,164 @@ def remove_job_safe(scheduler: AsyncIOScheduler, job_id: str):
         pass
 
 
-def on_text_message(priority: int = 0, block: bool = False):
-    """
-    文本消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_text_message(priority=0, block=False):
+    """文本消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):  # 无参数调用时
+            f = priority
+            setattr(f, '_event_type', 'text_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        # 有参数调用时
+        setattr(func, '_event_type', 'text_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'text_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
-
-
-def on_image_message(priority: int = 0, block: bool = False):
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
-
-        setattr(wrapper, '_event_type', 'image_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_voice_message(priority: int = 0, block: bool = False):
-    """
-    语音消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_image_message(priority=0, block=False):
+    """图片消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'image_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'image_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'voice_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_emoji_message(priority: int = 0, block: bool = False):
-    """
-    表情消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_voice_message(priority=0, block=False):
+    """语音消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'voice_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'voice_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'emoji_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_file_message(priority: int = 0, block: bool = False):
-    """
-    文件消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_emoji_message(priority=0, block=False):
+    """表情消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'emoji_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'emoji_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'file_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_quote_message(priority: int = 0, block: bool = False):
-    """
-    引用消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_file_message(priority=0, block=False):
+    """文件消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'file_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'file_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'quote_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_video_message(priority: int = 0, block: bool = False):
-    """
-    视频消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_quote_message(priority=0, block=False):
+    """引用消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'quote_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'quote_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'video_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_pat_message(priority: int = 0, block: bool = False):
-    """
-    拍一拍消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_video_message(priority=0, block=False):
+    """视频消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'video_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'video_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'pat_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
-
-    return decorator
+    return decorator if not callable(priority) else decorator(priority)
 
 
-def on_at_message(priority: int = 0, block: bool = False):
-    """
-    被@消息装饰器
-    :param priority: 优先级(99-0)，99为最高优先级
-    :param block: 是否阻止其他插件继续处理
-    """
+def on_pat_message(priority=0, block=False):
+    """拍一拍消息装饰器"""
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            return func(self, *args, **kwargs)
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'pat_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'pat_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
 
-        setattr(wrapper, '_event_type', 'at_message')
-        setattr(wrapper, '_priority', min(max(priority, 0), 99))
-        setattr(wrapper, '_block', block)
-        return wrapper
+    return decorator if not callable(priority) else decorator(priority)
 
-    return decorator
+
+def on_at_message(priority=0, block=False):
+    """被@消息装饰器"""
+
+    def decorator(func):
+        if callable(priority):
+            f = priority
+            setattr(f, '_event_type', 'at_message')
+            setattr(f, '_priority', 0)
+            setattr(f, '_block', False)
+            return f
+        setattr(func, '_event_type', 'at_message')
+        setattr(func, '_priority', min(max(priority, 0), 99))
+        setattr(func, '_block', block)
+        return func
+
+    return decorator if not callable(priority) else decorator(priority)
