@@ -42,7 +42,7 @@ class GetWeather(PluginBase):
         if len(command) == 1:
             await bot.send_at_message(message["FromWxid"], "\n" + self.command_format, [message["SenderWxid"]])
             return
-        elif len(command) > 4:
+        elif len(command) > 3:
             return
 
         # 配置密钥检查
