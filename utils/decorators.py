@@ -57,7 +57,7 @@ def remove_job_safe(scheduler: AsyncIOScheduler, job_id: str):
         pass
 
 
-def on_text_message(priority=0, block=False):
+def on_text_message(priority=0):
     """文本消息装饰器"""
 
     def decorator(func):
@@ -65,18 +65,16 @@ def on_text_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'text_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         # 有参数调用时
         setattr(func, '_event_type', 'text_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_image_message(priority=0, block=False):
+def on_image_message(priority=0):
     """图片消息装饰器"""
 
     def decorator(func):
@@ -84,17 +82,15 @@ def on_image_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'image_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'image_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_voice_message(priority=0, block=False):
+def on_voice_message(priority=0):
     """语音消息装饰器"""
 
     def decorator(func):
@@ -102,17 +98,15 @@ def on_voice_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'voice_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'voice_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_emoji_message(priority=0, block=False):
+def on_emoji_message(priority=0):
     """表情消息装饰器"""
 
     def decorator(func):
@@ -120,17 +114,15 @@ def on_emoji_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'emoji_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'emoji_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_file_message(priority=0, block=False):
+def on_file_message(priority=0):
     """文件消息装饰器"""
 
     def decorator(func):
@@ -138,11 +130,9 @@ def on_file_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'file_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'file_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
@@ -156,17 +146,15 @@ def on_quote_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'quote_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'quote_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_video_message(priority=0, block=False):
+def on_video_message(priority=0):
     """视频消息装饰器"""
 
     def decorator(func):
@@ -174,17 +162,15 @@ def on_video_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'video_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'video_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_pat_message(priority=0, block=False):
+def on_pat_message(priority=0):
     """拍一拍消息装饰器"""
 
     def decorator(func):
@@ -192,17 +178,15 @@ def on_pat_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'pat_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'pat_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
 
 
-def on_at_message(priority=0, block=False):
+def on_at_message(priority=0):
     """被@消息装饰器"""
 
     def decorator(func):
@@ -210,11 +194,9 @@ def on_at_message(priority=0, block=False):
             f = priority
             setattr(f, '_event_type', 'at_message')
             setattr(f, '_priority', 0)
-            setattr(f, '_block', False)
             return f
         setattr(func, '_event_type', 'at_message')
         setattr(func, '_priority', min(max(priority, 0), 99))
-        setattr(func, '_block', block)
         return func
 
     return decorator if not callable(priority) else decorator(priority)
