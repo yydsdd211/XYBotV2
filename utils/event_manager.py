@@ -12,7 +12,7 @@ class EventManager:
             method = getattr(instance, method_name)
             if hasattr(method, '_event_type'):
                 event_type = getattr(method, '_event_type')
-                priority = getattr(method, '_priority', 0)
+                priority = getattr(method, '_priority', 50)
                 
                 if event_type not in cls._handlers:
                     cls._handlers[event_type] = []
