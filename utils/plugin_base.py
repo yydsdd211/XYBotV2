@@ -41,3 +41,7 @@ class PluginBase(ABC):
             remove_job_safe(scheduler, job_id)
         logger.info("已卸载定时任务: {}", self._scheduled_jobs)
         self._scheduled_jobs.clear()
+
+    async def async_init(self):
+        """插件异步初始化"""
+        return

@@ -51,6 +51,7 @@ class PluginManager:
             plugin = plugin_class()
             EventManager.bind_instance(plugin)
             await plugin.on_enable(bot)
+            await plugin.async_init()
             self.plugins[plugin_name] = plugin
             self.plugin_classes[plugin_name] = plugin_class
             self.plugin_info[plugin_name]["enabled"] = True

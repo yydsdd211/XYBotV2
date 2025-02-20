@@ -205,5 +205,5 @@ async def bot_core():
         if data:
             for message in data:
                 asyncio.create_task(xybot.process_message(message))
-        while time.time() - now < 1:
+        while time.time() - now < 0.5:
             pass
