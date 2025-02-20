@@ -35,8 +35,8 @@ class WechatAPIServer:
         :return:
         """
 
-        arguments = ["--port", str(port), "--mode", mode, "--redis-host", redis_host, "--redis-port", str(redis_port),
-                     "--redis-password", redis_password, "--redis-db", str(redis_db)]
+        arguments = ["-p", str(port), "-m", mode, "-rh", redis_host, "-rp", str(redis_port), "-rpwd", redis_password,
+                     "-rdb", str(redis_db)]
 
         command = [self.executable_path] + arguments
 
