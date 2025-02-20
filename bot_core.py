@@ -178,10 +178,9 @@ async def bot_core():
 
     # ========== 开始接受消息 ========== #
 
-    # 先接受10秒的消息，之前的消息有堆积
+    # 先接受堆积消息
     logger.info("处理堆积消息中")
-    now = time.time()
-    while time.time() - now < 10:
+    while True:
         data = await bot.sync_message()
         data = data.get("AddMsgs")
         if not data:

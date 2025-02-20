@@ -26,7 +26,7 @@ class PluginManager:
 
     async def load_plugin(self, bot: WechatAPIClient, plugin_class: Type[PluginBase],
                           is_disabled: bool = False) -> bool:
-        """加载单个插件"""
+        """加载单个插件，接受Type[PluginBase]"""
         try:
             plugin_name = plugin_class.__name__
 
@@ -88,11 +88,10 @@ class PluginManager:
         """从plugins目录批量加载插件"""
         loaded_plugins = []
 
-        for filename in os.listdir("plugins"):
-            if filename.endswith('.py') and not filename.startswith('__'):
-                module_name = filename[:-3]
+        for dirname in os.listdir("plugins"):
+            if os.path.isdir(f"plugins/{dirname}") and os.path.exists(f"plugins/{dirname}/main.py"):
                 try:
-                    module = importlib.import_module(f"plugins.{module_name}")
+                    module = importlib.import_module(f"plugins.{dirname}.main")
                     for name, obj in inspect.getmembers(module):
                         if inspect.isclass(obj) and issubclass(obj, PluginBase) and obj != PluginBase:
                             is_disabled = False
@@ -101,8 +100,9 @@ class PluginManager:
 
                             if await self.load_plugin(bot, obj, is_disabled=is_disabled):
                                 loaded_plugins.append(obj.__name__)
+
                 except:
-                    logger.error(f"加载插件模块 {module_name} 时发生错误: {traceback.format_exc()}")
+                    logger.error(f"加载 {dirname} 时发生错误: {traceback.format_exc()}")
                     return False
 
         return loaded_plugins
@@ -117,36 +117,28 @@ class PluginManager:
         Returns:
             bool: 是否成功加载插件
         """
-        try:
-            # 遍历plugins目录查找插件
-            for filename in os.listdir("plugins"):
-                if not filename.endswith('.py') or filename.startswith('__'):
-                    continue
+        found = False
+        for dirname in os.listdir("plugins"):
+            try:
+                if os.path.isdir(f"plugins/{dirname}") and os.path.exists(f"plugins/{dirname}/main.py"):
+                    module = importlib.import_module(f"plugins.{dirname}.main")
+                    importlib.reload(module)
 
-                module_name = filename[:-3]
-                try:
-                    # 导入模块
-                    module = importlib.import_module(f"plugins.{module_name}")
-                    importlib.reload(module)  # 重新加载以确保获取最新版本
-
-                    # 在模块中查找指定名称的插件类
                     for name, obj in inspect.getmembers(module):
                         if (inspect.isclass(obj) and
                                 issubclass(obj, PluginBase) and
                                 obj != PluginBase and
                                 obj.__name__ == plugin_name):
+                            found = True
                             return await self.load_plugin(bot, obj)
+            except:
+                logger.error(f"检查 {dirname} 时发生错误: {traceback.format_exc()}")
+                continue
 
-                except:
-                    logger.error(f"检查模块 {module_name} 时发生错误: {traceback.format_exc()}")
-                    continue
-
-            logger.error(f"未找到插件类 {plugin_name}")
+        if not found:
+            logger.warning(f"未找到插件类 {plugin_name}")
             return False
 
-        except Exception as e:
-            logger.error(f"加载插件 {plugin_name} 时发生错误: {traceback.format_exc()}")
-            return False
 
     async def unload_all_plugins(self) -> tuple[List[str], List[str]]:
         """卸载所有插件"""
@@ -212,7 +204,7 @@ class PluginManager:
 
             # 重新加载所有模块
             for module_name in list(sys.modules.keys()):
-                if module_name.startswith('plugins.') and not module_name == 'plugins.manage_plugin':
+                if module_name.startswith('plugins.') and not module_name.endswith('ManagePlugin'):
                     del sys.modules[module_name]
 
             # 从目录重新加载插件
