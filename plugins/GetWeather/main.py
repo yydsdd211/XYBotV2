@@ -11,7 +11,10 @@ from utils.plugin_base import PluginBase
 class GetWeather(PluginBase):
     description = "获取天气"
     author = "HenryXiaoYang"
-    version = "1.0.0"
+    version = "1.0.1"
+
+    # Change Log
+    # 1.0.1 2024-02-20 修改天气插件触发条件
 
     def __init__(self):
         super().__init__()
@@ -40,6 +43,11 @@ class GetWeather(PluginBase):
             await bot.send_at_message(message["FromWxid"], "\n" + self.command_format, [message["SenderWxid"]])
             return
         elif len(command) > 4:
+            return
+
+        # 配置密钥检查
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置天气API密钥！", [message["SenderWxid"]])
             return
 
         command.remove("天气")

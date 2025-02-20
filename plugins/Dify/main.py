@@ -16,7 +16,10 @@ from utils.plugin_base import PluginBase
 class Dify(PluginBase):
     description = "Dify插件"
     author = "HenryXiaoYang"
-    version = "1.0.0"
+    version = "1.1.0"
+
+    # Change Log
+    # 1.1.0 2024-02-20 插件优先级，插件阻塞
 
     def __init__(self):
         super().__init__()
@@ -47,7 +50,7 @@ class Dify(PluginBase):
 
         self.db = BotDatabase()
 
-    @on_text_message
+    @on_text_message(priority=90)
     async def handle_text(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -62,24 +65,39 @@ class Dify(PluginBase):
         elif command and command[0] in self.other_plugin_cmd:  # 指令来自其他插件
             return
 
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
+
         if await self._check_point(bot, message):
             await self.dify(bot, message, message["Content"])
+        return False
 
-    @on_at_message
+    @on_at_message(priority=90)
     async def handle_at(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
 
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
+
         if await self._check_point(bot, message):
             await self.dify(bot, message, message["Content"])
 
-    @on_voice_message
+        return False
+
+    @on_voice_message(priority=90)
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
 
         if message["IsGroup"]:
             return
+
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
 
         if await self._check_point(bot, message):
             upload_file_id = await self.upload_file(message["FromWxid"], message["Content"])
@@ -94,13 +112,19 @@ class Dify(PluginBase):
 
             await self.dify(bot, message, " \n", files)
 
-    @on_image_message
+        return False
+
+    @on_image_message(priority=90)
     async def handle_image(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
 
         if message["IsGroup"]:
             return
+
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
 
         if await self._check_point(bot, message):
             upload_file_id = await self.upload_file(message["FromWxid"], bot.base64_to_byte(message["Content"]))
@@ -115,13 +139,19 @@ class Dify(PluginBase):
 
             await self.dify(bot, message, " \n", files)
 
-    @on_video_message
+        return False
+
+    @on_video_message(priority=90)
     async def handle_video(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
 
         if message["IsGroup"]:
             return
+
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
 
         if await self._check_point(bot, message):
             upload_file_id = await self.upload_file(message["FromWxid"], bot.base64_to_byte(message["Video"]))
@@ -136,13 +166,19 @@ class Dify(PluginBase):
 
             await self.dify(bot, message, " \n", files)
 
-    @on_file_message
+        return False
+
+    @on_file_message(priority=90)
     async def handle_file(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
 
         if message["IsGroup"]:
             return
+
+        if not self.api_key:
+            await bot.send_at_message(message["FromWxid"], "\n你还没配置Dify API密钥！", [message["SenderWxid"]])
+            return False
 
         if await self._check_point(bot, message):
             upload_file_id = await self.upload_file(message["FromWxid"], message["Content"])
@@ -156,6 +192,8 @@ class Dify(PluginBase):
             ]
 
             await self.dify(bot, message, " \n", files)
+
+        return False
 
     async def dify(self, bot: WechatAPIClient, message: dict, query: str, files=None):
         if files is None:
