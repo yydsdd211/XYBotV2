@@ -38,25 +38,29 @@ class News(PluginBase):
 
         if "随机" in command[0]:
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://tools.mgtv100.com/external/v1/toutiao/index") as resp:
+                async with session.get("https://cn.apihz.cn/api/xinwen/baidu.php?id=88888888&key=88888888") as resp:
                     data = await resp.json()
 
             if data["code"] != 200:
                 await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n新闻获取失败！")
                 return
 
-            result = data.get("data", {}).get("result", {})
+            result = data.get("data", [])
+
+            if len(result) == 0:
+                await bot.send_text_message(message["FromWxid"], "-----XYBot-----\n新闻获取失败！")
+                return
 
             new = choice(result["data"])
             await bot.send_link_message(message["FromWxid"],
-                                        title=new["title"],
-                                        url=new["url"],
-                                        description=f"发布: {new['date']}\n类别: {new['category']}\n作者: {new['author_name']}",
-                                        thumb_url=new["thumbnail_pic_s"])
+                                        title=new["word"],
+                                        url=new["rawUrl"],
+                                        description=new["desc"],
+                                        thumb_url=new["img"])
 
         else:
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
+                async with session.get("http://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
                     image_byte = await resp.read()
             await bot.send_image_message(message["FromWxid"], image_byte)
 
@@ -78,7 +82,7 @@ class News(PluginBase):
                 chatrooms.append(id)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
+            async with session.get("http://zj.v.api.aa1.cn/api/60s-v2/?cc=XYBot") as resp:
                 iamge_byte = await resp.read()
 
         for id in chatrooms:
@@ -103,7 +107,7 @@ class News(PluginBase):
                 chatrooms.append(id)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://v.api.aa1.cn/api/60s-v3/?cc=XYBot") as resp:
+            async with session.get("http://v.api.aa1.cn/api/60s-v3/?cc=XYBot") as resp:
                 iamge_byte = await resp.read()
 
         for id in chatrooms:
