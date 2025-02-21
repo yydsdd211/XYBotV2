@@ -199,13 +199,13 @@ workflow:
               max_tokens: 4096
               temperature: 0.7
             mode: chat
-            name: deepseek-v3
-            provider: openai_api_compatible
+            name: gpt-4o-mini
+            provider: openai
           prompt_template:
             - edition_type: basic
               id: 6de35274-53f5-4e34-89c5-a9c30ffb5f64
               role: system
-              text: '你是一个友好有用的助理，你的名字叫XYBot，你用的是Deepseek-v3模型。请用简洁、专业的方式回答问题。
+              text: '你是一个友好有用的助理，你的名字叫XYBot。你会用简洁、专业的方式回答问题。
 
             - 用户用什么语言问，就用什么语言回答
 
@@ -414,13 +414,13 @@ workflow:
             completion_params:
               temperature: 0.7
             mode: chat
-            name: step-1v-8k
-            provider: openai_api_compatible
+            name: gpt-4o-mini
+            provider: openai
           prompt_template:
             - id: 230c6990-e5b0-41d7-9dc8-70782d28bd8d
               role: system
               text: 你是一个乐于助人的助手。请将图片里的内容完整无缺的复述出来。
-          selected: false
+          selected: true
           title: 支持图片输入的LLM
           type: llm
           variables: [ ]
@@ -439,7 +439,7 @@ workflow:
         positionAbsolute:
           x: 507.5756009542859
           y: 498.0040880918219
-        selected: false
+        selected: true
         sourcePosition: right
         targetPosition: left
         type: custom
@@ -522,13 +522,13 @@ workflow:
             completion_params:
               temperature: 0.7
             mode: chat
-            name: deepseek-v3
-            provider: openai_api_compatible
+            name: gpt-4o-mini
+            provider: openai
           prompt_template:
             - id: 6291138d-3a76-46e1-a7e0-d2670d6352f5
               role: system
-              text: ''
-          selected: true
+              text: 你是一个友好的助理，你的名字叫XYBot。你会用简洁方式回答问题。
+          selected: false
           title: LLM
           type: llm
           variables: [ ]
@@ -542,7 +542,7 @@ workflow:
         positionAbsolute:
           x: 1115.57540385159
           y: 637.9065614866665
-        selected: true
+        selected: false
         sourcePosition: right
         targetPosition: left
         type: custom
@@ -602,6 +602,6 @@ workflow:
         type: custom
         width: 244
     viewport:
-      x: 49.25140302119502
-      y: -160.44690452784948
+      x: 166.25140302119496
+      y: -208.44690452784948
       zoom: 0.6997797002524726
