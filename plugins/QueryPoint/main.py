@@ -1,7 +1,7 @@
 import tomllib
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -22,7 +22,7 @@ class QueryPoint(PluginBase):
         self.enable = config["enable"]
         self.command = config["command"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):

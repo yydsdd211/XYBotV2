@@ -5,7 +5,7 @@ from random import randint
 import pytz
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -36,7 +36,7 @@ class SignIn(PluginBase):
 
         self.timezone = main_config["timezone"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
         # 每日签到排名数据
         self.today_signin_count = 0

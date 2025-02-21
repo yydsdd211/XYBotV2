@@ -3,7 +3,7 @@ import tomllib
 from random import choice
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -25,7 +25,7 @@ class Leaderboard(PluginBase):
         self.command = config["command"]
         self.max_count = config["max-count"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):

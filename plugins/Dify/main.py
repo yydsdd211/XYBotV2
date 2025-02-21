@@ -8,7 +8,7 @@ import filetype
 from loguru import logger
 
 from WechatAPI import WechatAPIClient
-from database.database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -48,9 +48,9 @@ class Dify(PluginBase):
 
         self.http_proxy = plugin_config["http-proxy"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
-    @on_text_message(priority=90)
+    @on_text_message(priority=20)
     async def handle_text(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -73,7 +73,7 @@ class Dify(PluginBase):
             await self.dify(bot, message, message["Content"])
         return False
 
-    @on_at_message(priority=90)
+    @on_at_message(priority=20)
     async def handle_at(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -87,7 +87,7 @@ class Dify(PluginBase):
 
         return False
 
-    @on_voice_message(priority=90)
+    @on_voice_message(priority=20)
     async def handle_voice(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -114,7 +114,7 @@ class Dify(PluginBase):
 
         return False
 
-    @on_image_message(priority=90)
+    @on_image_message(priority=20)
     async def handle_image(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -141,7 +141,7 @@ class Dify(PluginBase):
 
         return False
 
-    @on_video_message(priority=90)
+    @on_video_message(priority=20)
     async def handle_video(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return
@@ -168,7 +168,7 @@ class Dify(PluginBase):
 
         return False
 
-    @on_file_message(priority=90)
+    @on_file_message(priority=20)
     async def handle_file(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
             return

@@ -6,7 +6,7 @@ from random import sample
 from PIL import Image, ImageDraw
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -33,7 +33,7 @@ class Gomoku(PluginBase):
         self.accept_game_commands = config["accept-game-commands"]
         self.play_game_commands = config["play-game-commands"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
         # 游戏状态存储
         self.gomoku_games = {}  # 存储所有进行中的游戏

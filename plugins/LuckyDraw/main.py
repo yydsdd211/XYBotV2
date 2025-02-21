@@ -4,7 +4,7 @@ import tomllib
 from loguru import logger
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -38,7 +38,7 @@ class LuckyDraw(PluginBase):
         self.draw_per_guarantee = config["draw-per-guarantee"]
         self.guaranteed_max_probability = config["guaranteed-max-probability"]
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):

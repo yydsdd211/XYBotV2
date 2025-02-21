@@ -10,7 +10,11 @@ redis-db = 0               # Redis数据库编号，默认0
 [XYBot]
 version = "v1.0.0"                    # 版本号，请勿修改
 ignore-protection = false             # 是否忽略风控保护机制，建议保持false
-database-url = "sqlite:///xybot.db"   # SQLite数据库地址，一般无需修改
+
+# SQLite数据库地址，一般无需修改
+XYBotDB-url = "sqlite:///database/xybot.db"
+msgDB-url = "sqlite+aiosqlite:///database/message.db"
+keyvalDB-url = "sqlite+aiosqlite:///database/keyval.db"
 
 # 管理员设置
 admins = ["admin-wxid", "admin-wxid"]  # 管理员的wxid列表，可从消息日志中获取

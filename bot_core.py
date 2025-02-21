@@ -8,7 +8,9 @@ from pathlib import Path
 from loguru import logger
 
 import WechatAPI
-from database.database import BotDatabase
+from database.XYBotDB import XYBotDB
+from database.keyvalDB import KeyvalDB
+from database.messsagDB import MessageDB
 from utils.decorators import scheduler
 from utils.plugin_manager import plugin_manager
 from utils.xybot import XYBot
@@ -166,7 +168,13 @@ async def bot_core():
     xybot.update_profile(bot.wxid, bot.nickname, bot.alias, bot.phone)
 
     # 初始化数据库
-    BotDatabase()
+    XYBotDB()
+
+    message_db = MessageDB()
+    await message_db.initialize()
+
+    keyval_db = KeyvalDB()
+    await keyval_db.initialize()
 
     # 启动调度器
     scheduler.start()
@@ -180,11 +188,17 @@ async def bot_core():
 
     # 先接受堆积消息
     logger.info("处理堆积消息中")
+    count = 0
     while True:
         data = await bot.sync_message()
         data = data.get("AddMsgs")
         if not data:
-            break
+            if count > 2:
+                break
+            else:
+                count += 1
+                continue
+
         logger.debug("接受到 {} 条消息", len(data))
         await asyncio.sleep(1)
     logger.success("处理堆积消息完毕")

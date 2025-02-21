@@ -36,12 +36,12 @@ class Chatroom(Base):
     llm_thread_id = Column(JSON, nullable=False, default=lambda: {}, comment='llm_thread_id')
 
 
-class BotDatabase(metaclass=Singleton):
+class XYBotDB(metaclass=Singleton):
     def __init__(self):
         with open("main_config.toml", "rb") as f:
             main_config = tomllib.load(f)
 
-        self.database_url = main_config["XYBot"]["database-url"]
+        self.database_url = main_config["XYBot"]["XYBotDB-url"]
         self.engine = create_engine(self.database_url)
         self.DBSession = sessionmaker(bind=self.engine)
 

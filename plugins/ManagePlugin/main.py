@@ -3,7 +3,7 @@ import tomllib
 from tabulate import tabulate
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 from utils.plugin_manager import plugin_manager
@@ -17,7 +17,7 @@ class ManagePlugin(PluginBase):
     def __init__(self):
         super().__init__()
 
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
         with open("plugins/ManagePlugin/config.toml", "rb") as f:
             plugin_config = tomllib.load(f)

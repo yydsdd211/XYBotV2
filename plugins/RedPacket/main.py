@@ -10,7 +10,7 @@ from captcha.image import ImageCaptcha
 from loguru import logger
 
 from WechatAPI import WechatAPIClient
-from database import BotDatabase
+from database.XYBotDB import XYBotDB
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 
@@ -36,7 +36,7 @@ class RedPacket(PluginBase):
         self.max_time = config["max-time"]
 
         self.red_packets = {}
-        self.db = BotDatabase()
+        self.db = XYBotDB()
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):
