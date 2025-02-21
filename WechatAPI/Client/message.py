@@ -630,7 +630,7 @@ class MessageMixin(WechatAPIClientBase):
         if not self.wxid:
             raise UserLoggedOut("请先登录")
 
-        async with aiohttp.ClientSession(timeout=10) as session:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
             json_param = {"Wxid": self.wxid, "Scene": 0, "Synckey": ""}
             response = await session.post(f'http://{self.ip}:{self.port}/Sync', json=json_param)
             json_resp = await response.json()
