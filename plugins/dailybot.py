@@ -28,7 +28,7 @@ class DailyBot(PluginBase):
         super().__init__()
 
         # 获取配置文件路径
-        config_path = os.path.join(os.path.dirname(__file__), "config.toml")
+        config_path = os.path.join(os.path.dirname(__file__), "dailybot.toml")
         
         try:
             with open(config_path, "rb") as f:
@@ -145,18 +145,10 @@ class DailyBot(PluginBase):
             self.chouqian_command = ["抽签"]
             self.chouqian_api_key = "mzCDYZFp5w9rp8N42cwQM3qiZG"
 
-    async def async_init(self):
-        """异步初始化函数"""
-        try:
-            logger.info("[初始化] DailyBot初始化完成")
-        except Exception as e:
-            logger.error(f"DailyBot异步初始化失败: {str(e)}")
-            self.enable = False
-
-    @on_text_message(priority=50)
+    @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):
         if not self.enable:
-            return True  # 继续执行其他插件
+            return
 
         content = str(message["Content"]).strip()
         command = content.split(" ")
@@ -174,7 +166,7 @@ class DailyBot(PluginBase):
                     image_content = await self.download_image(result)
                     if image_content:
                         await bot.send_image_message(message["FromWxid"], image=image_content)
-                        return False  # 阻止其他插件处理
+                        return
                     result = "获取早报图片失败"
 
             elif content == self.moyu_command:
@@ -183,7 +175,7 @@ class DailyBot(PluginBase):
                     image_content = await self.download_image(result)
                     if image_content:
                         await bot.send_image_message(message["FromWxid"], image=image_content)
-                        return False  # 阻止其他插件处理
+                        return
 
             elif content == self.bagua_command:
                 result = await self.get_mx_bagua()
@@ -191,7 +183,7 @@ class DailyBot(PluginBase):
                     image_content = await self.download_image(result)
                     if image_content:
                         await bot.send_image_message(message["FromWxid"], image=image_content)
-                        return False  # 阻止其他插件处理
+                        return
 
             elif content == self.kfc_command:
                 result = await self.get_kfc_text()
@@ -229,8 +221,6 @@ class DailyBot(PluginBase):
                     result = result.lstrip("\n")  # 私聊去掉开头的换行符
                     await bot.send_text_message(message["FromWxid"], result)
 
-            return False  # 阻止其他插件处理
-
         except Exception as e:
             error_msg = f"处理失败: {str(e)}"
             logger.error(f"[处理异常] {error_msg}\n{traceback.format_exc()}")
@@ -238,8 +228,6 @@ class DailyBot(PluginBase):
                 await bot.send_at_message(message["FromWxid"], error_msg, [message["SenderWxid"]])
             else:
                 await bot.send_text_message(message["FromWxid"], error_msg)
-
-            return True  # 发生错误时继续执行其他插件
 
     async def get_morning_news(self) -> str:
         """获取早报信息"""
@@ -341,10 +329,6 @@ class DailyBot(PluginBase):
     async def download_image(self, url: str) -> Optional[bytes]:
         """下载图片内容"""
         try:
-            # 使用cache目录存储临时文件
-            cache_dir = os.path.join("resources", "cache", "dailybot")
-            os.makedirs(cache_dir, exist_ok=True)
-            
             logger.info("[图片下载] 开始下载图片: {}", url)
             # 随机生成现代浏览器User-Agent
             user_agents = [
@@ -382,7 +366,7 @@ class DailyBot(PluginBase):
             return None
             
         except Exception as e:
-            logger.error(f"[图片下载] 下载异常: {str(e)}\n{traceback.format_exc()}")
+            logger.error("[图片下载] 下载异常: {}\n{}", str(e), traceback.format_exc())
             return None
 
     def is_valid_url(self, url: str) -> bool:

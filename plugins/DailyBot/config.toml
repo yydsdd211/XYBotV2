@@ -1,8 +1,11 @@
 [basic]
+# 是否启用插件
 enable = true
+# ALAPI的token,用于部分API调用
 alapi_token = ""
 
 [common]
+# 请求时使用的User-Agent列表
 user_agents = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"]
 
 [morning_news]
