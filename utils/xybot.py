@@ -539,7 +539,12 @@ class XYBot:
         elif msg_type == "ClientCheckGetExtInfo":
             pass
         else:
-            logger.info("未知的系统消息类型: {}", message)
+            logger.info("收到系统消息: {}", message)
+            if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
+                if self.ignore_protection or not protector.check(14400):
+                    await EventManager.emit("system_message", self.bot, message)
+                else:
+                    logger.warning("风控保护: 新设备登录后4小时内请挂机")
 
     async def process_pat_message(self, message: Dict[str, Any]):
         """处理拍一拍请求消息"""
