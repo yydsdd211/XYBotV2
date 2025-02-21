@@ -1367,7 +1367,7 @@
         class="n">json_resp</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_get_closest_frame_rate</span><span
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_closest_frame_rate</span><span
         class="p">(</span><span class="n">frame_rate</span><span class="p">:</span> <span class="nb">int</span><span
         class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="n">supported</span> <span class="o">=</span> <span class="p">[</span><span
@@ -2057,8 +2057,11 @@
         class="p">)</span>
 
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span
-        class="o">.</span><span class="n">ClientSession</span><span class="p">()</span> <span class="k">as</span> <span
-        class="n">session</span><span class="p">:</span>
+        class="o">.</span><span class="n">ClientSession</span><span class="p">(</span><span
+        class="n">timeout</span><span class="o">=</span><span class="n">aiohttp</span><span class="o">.</span><span
+        class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span
+        class="mi">10</span><span class="p">))</span> <span class="k">as</span> <span class="n">session</span><span
+        class="p">:</span>
             <span class="n">json_param</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Wxid&quot;</span><span
         class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wxid</span><span
         class="p">,</span> <span class="s2">&quot;Scene&quot;</span><span class="p">:</span> <span
