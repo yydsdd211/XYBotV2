@@ -1,11 +1,11 @@
 import asyncio
 import logging
 import tomllib
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List
 
 from pydantic import validate_arguments
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_scoped_session
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -20,7 +20,7 @@ class Message(DeclarativeBase):
     __tablename__ = 'messages'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    msg_id = Column(Integer, unique=True, index=True, comment='消息唯一ID（整型）')
+    msg_id = Column(Integer, index=True, comment='消息唯一ID（整型）')
     sender_wxid = Column(String(40), index=True, comment='消息发送人wxid')
     from_wxid = Column(String(40), index=True, comment='消息来源wxid')
     msg_type = Column(Integer, comment='消息类型（整型编码）')
@@ -123,7 +123,26 @@ class MessageDB(metaclass=Singleton):
         """关闭数据库连接"""
         await self.engine.dispose()
 
+    async def cleanup_messages(self):
+        """每三天清理旧消息"""
+        while True:
+            async with self._async_session_factory() as session:
+                try:
+                    # 计算三天前的时间
+                    three_days_ago = datetime.now() - timedelta(days=3)
+                    # 删除三天前的消息
+                    await session.execute(
+                        delete(Message).where(Message.timestamp < three_days_ago)
+                    )
+                    await session.commit()
+                except Exception as e:
+                    logging.error(f"清理消息失败: {str(e)}")
+                    await session.rollback()
+            await asyncio.sleep(259200)  # 每三天（259200秒）执行一次
+
     async def __aenter__(self):
+        # 启动清理消息的定时任务
+        asyncio.create_task(self.cleanup_messages())
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

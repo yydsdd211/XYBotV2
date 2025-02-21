@@ -6,6 +6,7 @@ from loguru import logger
 
 from WechatAPI import WechatAPIClient
 from WechatAPI.Client.protect import protector
+from database.messsagDB import MessageDB
 from utils.event_manager import EventManager
 
 
@@ -25,6 +26,8 @@ class XYBot:
         self.ignore_mode = main_config.get("XYBot", {}).get("ignore-mode", "")
         self.whitelist = main_config.get("XYBot", {}).get("whitelist", [])
         self.blacklist = main_config.get("XYBot", {}).get("blacklist", [])
+
+        self.msg_db = MessageDB()
 
 
     def update_profile(self, wxid: str, nickname: str, alias: str, phone: str):
@@ -117,6 +120,16 @@ class XYBot:
             ats = []
         message["Ats"] = ats if ats and ats[0] != "" else []
 
+        # 保存消息到数据库
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["Content"],
+            is_group=message["IsGroup"]
+        )
+
         if self.wxid in ats:
             logger.info("收到被@消息: 消息ID:{} 来自:{} 发送人:{} @:{} 内容:{}",
                         message["MsgId"],
@@ -171,6 +184,15 @@ class XYBot:
                     message["SenderWxid"],
                     message["Content"])
 
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["MsgSource"],
+            is_group=message["IsGroup"]
+        )
+
         # 解析图片消息
         aeskey, cdnmidimgurl = None, None
         try:
@@ -219,6 +241,15 @@ class XYBot:
                     message["SenderWxid"],
                     message["Content"])
 
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["Content"],
+            is_group=message["IsGroup"]
+        )
+
         if message["IsGroup"] or not message.get("ImgBuf", {}).get("buffer", ""):
             # 解析语音消息
             voiceurl, length = None, None
@@ -264,6 +295,15 @@ class XYBot:
             if message["FromWxid"] == self.wxid:  # 自己发的消息
                 message["FromWxid"] = message["ToWxid"]
             message["IsGroup"] = False
+
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["Content"],
+            is_group=message["IsGroup"]
+        )
 
         try:
             root = ET.fromstring(message["Content"])
@@ -413,6 +453,15 @@ class XYBot:
                     message["SenderWxid"],
                     str(message["Content"]).replace("\n", ""))
 
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["Content"],
+            is_group=message["IsGroup"]
+        )
+
         message["Video"] = await self.bot.download_video(message["MsgId"])
 
         if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
@@ -440,6 +489,15 @@ class XYBot:
                     message["FromWxid"],
                     message["SenderWxid"],
                     message["Content"])
+
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=message["Content"],
+            is_group=message["IsGroup"]
+        )
 
         message["File"] = await self.bot.download_attach(attach_id)
 
@@ -506,6 +564,15 @@ class XYBot:
                     message["Patter"],
                     message["Patted"],
                     message["PatSuffix"])
+
+        await self.msg_db.save_message(
+            msg_id=int(message["MsgId"]),
+            sender_wxid=message["SenderWxid"],
+            from_wxid=message["FromWxid"],
+            msg_type=int(message["MsgType"]),
+            content=f"{message['Patter']} 拍了拍 {message['Patted']} {message['PatSuffix']}",
+            is_group=message["IsGroup"]
+        )
 
         if self.ignore_check(message["FromWxid"], message["SenderWxid"]):
             if self.ignore_protection or not protector.check(14400):
