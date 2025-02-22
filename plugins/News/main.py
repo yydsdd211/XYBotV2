@@ -37,7 +37,7 @@ class News(PluginBase):
             return
 
         if "随机" in command[0]:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
                 async with session.get("https://cn.apihz.cn/api/xinwen/baidu.php?id=88888888&key=88888888") as resp:
                     data = await resp.json()
 
