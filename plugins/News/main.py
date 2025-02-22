@@ -12,7 +12,10 @@ from utils.plugin_base import PluginBase
 class News(PluginBase):
     description = "新闻插件"
     author = "HenryXiaoYang"
-    version = "1.0.0"
+    version = "1.1.0"
+
+    # Change Log
+    # 1.1.0 2025/2/22 默认关闭定时新闻
 
     def __init__(self):
         super().__init__()
@@ -23,6 +26,7 @@ class News(PluginBase):
         config = plugin_config["News"]
 
         self.enable = config["enable"]
+        self.enable_schedule_news = config["enable-schedule-news"]
         self.command = config["command"]
 
     @on_text_message
@@ -66,6 +70,8 @@ class News(PluginBase):
 
     @schedule('cron', hour=12)
     async def noon_news(self, bot: WechatAPIClient):
+        if not self.enable_schedule_news:
+            return
         id_list = []
         wx_seq, chatroom_seq = 0, 0
         while True:
@@ -91,6 +97,8 @@ class News(PluginBase):
 
     @schedule('cron', hour=18)
     async def night_news(self, bot: WechatAPIClient):
+        if not self.enable_schedule_news:
+            return
         id_list = []
         wx_seq, chatroom_seq = 0, 0
         while True:

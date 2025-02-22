@@ -19,8 +19,8 @@ class Dify(PluginBase):
     version = "1.1.0"
 
     # Change Log
-    # 1.1.0 2024-02-20 插件优先级，插件阻塞
-    # 1.2.0 2024-02-22 有插件阻塞了，other-plugin-cmd可删了
+    # 1.1.0 2025-02-20 插件优先级，插件阻塞
+    # 1.2.0 2025-02-22 有插件阻塞了，other-plugin-cmd可删了
 
     def __init__(self):
         super().__init__()

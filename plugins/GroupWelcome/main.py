@@ -10,6 +10,10 @@ from utils.plugin_base import PluginBase
 
 
 class GroupWelcome(PluginBase):
+    description = "进群欢迎"
+    author = "HenryXiaoYang"
+    version = "1.0.0"
+
     def __init__(self):
         super().__init__()
 
