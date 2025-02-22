@@ -20,6 +20,7 @@ class Dify(PluginBase):
 
     # Change Log
     # 1.1.0 2024-02-20 插件优先级，插件阻塞
+    # 1.2.0 2024-02-22 有插件阻塞了，other-plugin-cmd可删了
 
     def __init__(self):
         super().__init__()
@@ -39,7 +40,6 @@ class Dify(PluginBase):
         self.base_url = plugin_config["base-url"]
 
         self.commands = plugin_config["commands"]
-        self.other_plugin_cmd = plugin_config["other-plugin-cmd"]
         self.command_tip = plugin_config["command-tip"]
 
         self.price = plugin_config["price"]
@@ -61,8 +61,6 @@ class Dify(PluginBase):
             return
         elif len(command) == 1 and command[0] in self.commands:  # 只是指令，但没请求内容
             await bot.send_at_message(message["FromWxid"], "\n" + self.command_tip, [message["SenderWxid"]])
-            return
-        elif command and command[0] in self.other_plugin_cmd:  # 指令来自其他插件
             return
 
         if not self.api_key:
