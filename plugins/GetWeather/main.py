@@ -14,7 +14,7 @@ class GetWeather(PluginBase):
     version = "1.0.1"
 
     # Change Log
-    # 1.0.1 2024-02-20 修改天气插件触发条件
+    # 1.0.1 2025-02-20 修改天气插件触发条件
 
     def __init__(self):
         super().__init__()
