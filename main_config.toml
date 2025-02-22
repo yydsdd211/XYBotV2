@@ -18,7 +18,7 @@ keyvalDB-url = "sqlite+aiosqlite:///database/keyval.db"
 
 # 管理员设置
 admins = ["admin-wxid", "admin-wxid"]  # 管理员的wxid列表，可从消息日志中获取
-disabled-plugins = ["ExamplePlugin", "TencentLke"]   # 禁用的插件列表，不需要的插件名称填在这里
+disabled-plugins = ["ExamplePlugin", "TencentLke", "DailyBot"]   # 禁用的插件列表，不需要的插件名称填在这里
 timezone = "Asia/Shanghai"             # 时区设置，中国用户使用 Asia/Shanghai
 
 # 实验性功能，如果main_config.toml配置改动，或者plugins文件夹有改动，自动重启。可以在开发时使用，不建议在生产环境使用。
