@@ -228,8 +228,9 @@ class DailyBot(PluginBase):
                 else:
                     result = result.lstrip("\n")  # 私聊去掉开头的换行符
                     await bot.send_text_message(message["FromWxid"], result)
+                return False  # 命中关键词并处理后阻止其他插件处理
 
-            return False  # 阻止其他插件处理
+            return True  # 未命中任何关键词时继续执行其他插件
 
         except Exception as e:
             error_msg = f"处理失败: {str(e)}"
