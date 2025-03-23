@@ -247,9 +247,6 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 # 确保Redis服务已启动
 redis-cli ping  # 如果返回PONG则表示Redis正常运行
 
-# 启动机器人 (旧方式)
-# python main.py
-
 # 启动机器人 (新方式 - 使用gunicorn和eventlet)
 python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
 ```
