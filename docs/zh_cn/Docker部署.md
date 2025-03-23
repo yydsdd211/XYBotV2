@@ -68,7 +68,7 @@ http://服务器IP地址:9999
 
 1. 🔌 Redis 连接失败
 
-- 检查 DragonFly 服务是否正常运行
+- 检查 Redis 服务是否正常运行
 - 确认 main_config.toml 中的 redis-host 配置是否正确
 
 2. ⚠️ 配置文件修改未生效
@@ -91,7 +91,7 @@ docker-compose logs --tail=100 xybotv2
 - 检查网络连接，是否能ping通微信服务器
 - 尝试关闭代理软件，尝试重启电脑
 - 尝试重启XYBot和Redis
-- 如是Docker部署，检查Docker容器网络是否能连接到微信服务器和Dragonfly数据库
+- 如是Docker部署，检查Docker容器网络是否能连接到微信服务器和 Redis 数据库
 
 5. `正在运行`相关的报错
 
