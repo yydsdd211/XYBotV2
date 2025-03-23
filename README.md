@@ -90,355 +90,90 @@ XYBot V2 采用插件化设计,所有功能都以插件形式实现。主要插�
 
 # 🚀 部署说明
 
-## 🐳 Docker 部署（推荐）
+## 💻 Python部署
 
-### 1. 🔧 准备环境
+### 🪟 Windows部署
 
-需要安装 Docker 和 Docker Compose:
+#### 1. 环境准备
 
-- 🐋 Docker 安装: https://docs.docker.com/get-started/get-docker/
-- 🔄 Docker Compose 安装: https://docs.docker.com/compose/install/
+- 安装 Python 3.11: https://www.python.org/downloads/release/python-3119/
+- 安装 ffmpeg: 从[ffmpeg官网](https://www.ffmpeg.org/download.html)下载并添加到环境变量
+- 安装 Redis: 从[Redis](https://github.com/tporadowski/redis/releases/tag/v5.0.14.1)下载并启动服务
 
-2. ⬇️ 拉取最新镜像
+#### 2. 安装项目
 
 ```bash
-# 克隆项目
 git clone https://github.com/HenryXiaoYang/XYBotV2.git
 cd XYBotV2
-
-# 拉取镜像
-docker-compose pull
-```
-
-3. 🚀 启动容器
-
-```bash
-# 首次启动
-docker-compose up -d
-
-# 查看容器状态
-docker-compose ps
-```
-
-4. 📱 查看日志然后登录微信
-
-```bash
-# 查看日志获取登录二维码
-docker-compose logs -f xybotv2
-```
-
-扫描终端显示的二维码完成登录。（如果扫不出来,可以打开链接扫码）。首次登录成功后,需要挂机4小时。之后机器人就会自动开始正常运行。
-
-5. ⚙️ 配置文件修改
-
-```bash
-# 查看数据卷位置
-docker volume inspect xybotv2
-
-# 编辑对应目录下的配置文件
-xybotv2-volumes-dir/_data/main_config.toml
-xybotv2-volumes-dir/_data/plugins/all_in_one_config.toml
-```
-
-修改配置后需要重启容器使配置生效:
-
-```bash
-docker-compose restart xybotv2
-```
-
-6. 🌐 访问Web界面
-
-Docker容器现在使用Gunicorn和Eventlet运行应用，可以通过以下地址访问Web界面：
-
-```
-http://服务器IP地址:9999
-```
-
-> [!TIP]
-> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
-
-### ❓ 常见问题
-
-1. 🔌 Redis 连接失败
-
-- 检查 Redis 服务是否正常运行
-- 确认 main_config.toml 中的 redis-host 配置是否正确
-
-2. ⚠️ 配置文件修改未生效
-
-- 重启容器: `docker-compose restart xybotv2`
-- 检查配置文件权限是否正确
-
-3. 📝 日志查看
-
-```bash
-# 查看实时日志
-docker-compose logs -f xybotv2
-
-# 查看最近100行日志
-docker-compose logs --tail=100 xybotv2
-```
-
-4. 🌐 无法访问Web界面
-
-- 确保9999端口已在防火墙中开放
-- 检查docker-compose.yml中的端口映射配置是否正确
-
-## 💻 直接部署
-
-### 🪟 Windows 部署步骤
-
-#### 1. 🔧 环境准备
-
-- 安装 Python 3.11 (必须是3.11版本): https://www.python.org/downloads/release/python-3119/
-    - 在安装过程中勾选 "Add Python to PATH" 选项
-    - 或者手动添加：
-        1. 右键点击 "此电脑" -> "属性" -> "高级系统设置" -> "环境变量"
-        2. 在 "系统变量" 中找到 Path,点击 "编辑"
-        3. 添加 Python 安装目录（如 `C:\Python311`）和 Scripts 目录（如 `C:\Python311\Scripts`）
-
-- 安装 ffmpeg:
-    1. 从 [ffmpeg官网](https://www.ffmpeg.org/download.html) 下载 Windows 版本
-    2. 解压到合适的目录（如 `C:\ffmpeg`）
-    3. 添加环境变量：
-        - 右键点击 "此电脑" -> "属性" -> "高级系统设置" -> "环境变量"
-        - 在 "系统变量" 中找到 Path，点击 "编辑"
-        - 添加 ffmpeg 的 bin 目录路径（如 `C:\ffmpeg\bin`）
-    4. 设置 IMAGEIO_FFMPEG_EXE 环境变量：
-        - 在 "系统变量" 中点击 "新建"
-        - 变量名输入：`IMAGEIO_FFMPEG_EXE`
-        - 变量值输入 ffmpeg.exe 的完整路径（如 `C:\ffmpeg\bin\ffmpeg.exe`）
-    5. 重启命令提示符或 PowerShell 使环境变量生效
-    6. 验证安装：
-        ```bash
-        ffmpeg -version
-        ```
-
-- 安装 Redis:
-    - 从 [Redis](https://github.com/tporadowski/redis/releases/tag/v5.0.14.1) 下载最新版本 (目前是7.4.2)
-    - 下载并解压 `Redis-x64-5.0.14.1.zip`
-    - 在命令行执行:
-      ```bash
-      # 进入目录
-      cd Redis-x64-5.0.14.1
-      
-      # 启动Redis服务
-      start redis-server.exe
-      ```
-
-#### 2. ⬇️ 下载项目
-
-```bash
-# 克隆项目
-git clone https://github.com/HenryXiaoYang/XYBotV2.git
-# 小白：直接 Github Download ZIP
-
-cd XYBotV2
-
-# 创建虚拟环境
 python -m venv venv
 .\venv\Scripts\activate
-
-# 安装依赖
 pip install -r requirements.txt
-
-# 安装gunicorn和eventlet
-pip install gunicorn eventlet
-
-# 使用镜像源安装
-pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
 
-#### 3. 🚀 启动机器人
+#### 3. 启动机器人
 
 ```bash
-# 确保Redis服务已启动
-redis-cli ping  # 如果返回PONG则表示Redis正常运行
-
-# 启动机器人 (新方式 - 使用gunicorn和eventlet)
-python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
+start redis-server
+python app.py
 ```
 
-#### 4. 📱 登录微信
+### 🐧 Linux部署
 
-- 扫描终端显示的二维码完成登录。如果扫不出来,可以打开二维码下面的链接扫码。
-- 首次登录成功后,需要挂机4小时。之后机器人就会开始正常运行。
-
-#### 5. ⚙️ 配置文件修改
-
-主配置: main_config.toml 主配置文件
-
-插件配置: plugins/all_in_one_config.toml 插件配置文件
-
-这几个插件需要配置API密钥才可正常工作:
-
-- 🤖 Ai
-- 🌤️ GetWeather
-
-
-- 如果机器人正在运行，需要重启才能使主配置生效：
-    ```bash
-    # 按Ctrl+C停止机器人
-    # 重新启动
-    python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
-    ```
-
-> [!TIP]
-> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
-
-### 💻 无WebUI简单启动（最轻量级方式）
-
-如果你不需要WebUI界面，可以直接使用bot.py来运行机器人：
-
-**Windows:**
-```bash
-# 确保在虚拟环境中
-.\venv\Scripts\activate
-
-# 直接运行bot.py
-python bot.py
-```
-
-**Linux:**
-```bash
-# 确保在虚拟环境中
-source venv/bin/activate
-
-# 直接运行bot.py
-python bot.py
-```
-
-这种方式的优点:
-- 不需要安装gunicorn和eventlet
-- 二维码直接显示在终端中，扫码即可登录
-- 占用资源更少，运行更稳定
-- 所有机器人功能都可通过聊天命令使用
-
-### 🐧 Linux 部署步骤
-
-#### 1. 🔧 环境准备
+#### 1. 环境准备
 
 ```bash
-# Ubuntu/Debian
 sudo apt update
 sudo apt install python3.11 python3.11-venv redis-server ffmpeg
-
-# CentOS/RHEL
-sudo yum install epel-release  # 如果需要EPEL仓库
-sudo yum install python3.11 redis ffmpeg
 sudo systemctl start redis
 sudo systemctl enable redis
-
-# 设置 IMAGEIO_FFMPEG_EXE 环境变量
-echo 'export IMAGEIO_FFMPEG_EXE=$(which ffmpeg)' >> ~/.bashrc
-source ~/.bashrc
-
-# 如果使用其他shell(如zsh)，则需要：
-# echo 'export IMAGEIO_FFMPEG_EXE=$(which ffmpeg)' >> ~/.zshrc
-# source ~/.zshrc
 ```
 
-#### 2. ⬇️ 下载项目
+#### 2. 安装项目
 
 ```bash
-# 克隆项目
 git clone https://github.com/HenryXiaoYang/XYBotV2.git
-# 小白：直接 Github Download ZIP
-
 cd XYBotV2
-
-# 创建虚拟环境
 python3.11 -m venv venv
 source venv/bin/activate
-
-# 安装依赖
 pip install -r requirements.txt
-
-# 安装gunicorn和eventlet
-pip install gunicorn eventlet
-
-# 使用镜像源安装
-pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
 
-#### 3. 🚀 启动机器人
+#### 3. 启动机器人
 
 ```bash
-# 确保在虚拟环境中
-source venv/bin/activate
-
-# 检查Redis服务状态
-systemctl status redis
-
-# 如果Redis未运行，启动服务
-sudo systemctl start redis
-
-# 设置Redis开机自启
-sudo systemctl enable redis
-
-# 验证Redis连接
-redis-cli ping
-# 如果返回PONG表示连接正常
-
-# 启动机器人 (旧方式)
-# python3 main.py
-
-# 启动机器人 (新方式 - 使用gunicorn和eventlet)
-python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
+python app.py
 ```
 
-#### 4. 📱 登录微信
+### 🌌 无WebUI简单启动
 
-- 扫描终端显示的二维码完成登录。如果扫不出来,可以打开二维码下面的链接扫码。
-- 首次登录成功后,需要挂机4小时。之后机器人就会开始正常运行。
+如果你不需要WebUI界面，可以直接使用bot.py：
 
-#### 5. ⚙️ 配置文件修改
+```bash
+python bot.py
+```
 
-主配置: main_config.toml 主配置文件
+## ⚙️ 配置说明
 
-插件配置: plugins/all_in_one_config.toml 插件配置文件
+- 主配置: main_config.toml
+- 插件配置: plugins/all_in_one_config.toml
 
-这几个插件需要配置API密钥才可正常工作:
-
+这几个插件需要配置API密钥:
 - 🤖 Ai
 - 🌤️ GetWeather
-
-- 如果机器人正在运行，需要重启才能使主配置生效：
-    ```bash
-    # 按Ctrl+C停止机器人
-    # 重新启动
-    python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
-    ```
-
-> [!TIP]
-> 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
 
 ## ❓ 常见问题
 
 1. 与网络相关的报错
-
-- 检查网络连接，是否能ping通微信服务器
-- 尝试关闭代理软件，尝试重启电脑
-- 尝试重启XYBot和Redis
-- 如是Docker部署，检查Docker容器网络是否能连接到微信服务器和Redis数据库
+   - 检查网络连接
+   - 关闭代理软件
+   - 重启XYBot和Redis
 
 2. `正在运行`相关的报错
+   - 将占用9000端口的进程结束
 
-- 将占用9000端口的进程强制结束
-
-3. 🌐 无法访问Web界面
-
-- 确保9999端口已在防火墙中开放
-- Windows上配置防火墙入站规则允许9999端口
-- Linux上使用以下命令开放端口：
-  ```bash
-  # Ubuntu/Debian
-  sudo ufw allow 9999
-  
-  # CentOS
-  sudo firewall-cmd --permanent --add-port=9999/tcp
-  sudo firewall-cmd --reload
-  ```
+3. 无法访问Web界面
+   - 确保9999端口已开放
+   - 配置防火墙允许9999端口
 
 # 💻 代码提交
 
