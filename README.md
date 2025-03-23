@@ -29,6 +29,14 @@ XYBot V2 是一个功能丰富的微信机器人框架,支持多种互动功能�
     <a href="https://qrcode.yangres.com/get_image">🔗图片会被缓存，点我查看最新二维码</a>
 </div>
 
+# 🙏 赞助
+
+<div style="text-align: center" align="center">
+    <h2>开源不易，请作者喝杯奶茶吧🙏</h2>
+    <img alt="微信收款码" src="docs/sponsor1.jpg" style="width: 250px; height: auto;">
+    <img alt="微信收款码" src="docs/sponsor2.jpg" style="width: 250px; height: auto;">
+</div>
+
 # ✨ 主要功能
 
 ## 🛠️ 基础功能
@@ -246,9 +254,6 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 ```bash
 # 确保Redis服务已启动
 redis-cli ping  # 如果返回PONG则表示Redis正常运行
-
-# 启动机器人 (旧方式)
-# python main.py
 
 # 启动机器人 (新方式 - 使用gunicorn和eventlet)
 python -m gunicorn --worker-class eventlet app:app --bind 0.0.0.0:9999
