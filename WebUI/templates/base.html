@@ -97,39 +97,41 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 <script>
+    // 页面加载完成后显示通知
     document.addEventListener('DOMContentLoaded', function () {
-        const flashMessages = [
-            { %
-        for category, message in messages %
-    }
-        {
-            message: {
-                {
-                    message | tojson
-                }
+        {%
+            for category, message in messages %
+        }
+        if (window.NotificationManager) {
+            NotificationManager.show({
+            {
+                message | tojson
             }
-        ,
-            category: {
+        },
+            {
                 {
                     category | tojson
                 }
             }
+        )
+            ;
+        } else {
+            showNotification({
+            {
+                message | tojson
+            }
+        },
+            {
+                {
+                    category | tojson
+                }
+            }
+        )
+            ;
         }
-    ,
         {%
             endfor %
         }
-    ]
-        ;
-
-        // 使用通知管理器显示消息
-        flashMessages.forEach(function (item) {
-            if (window.NotificationManager) {
-                NotificationManager.show(item.message, item.category);
-            } else {
-                showNotification(item.message, item.category);
-            }
-        });
     });
 </script>
 {% endif %}
