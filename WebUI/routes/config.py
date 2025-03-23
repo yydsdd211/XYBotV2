@@ -110,6 +110,7 @@ def save_config():
 
         # 获取请求体中的JSON数据
         config_data = request.json
+        current_app.logger.info(f"接收到配置数据: {config_data}")
 
         if not config_data:
             current_app.logger.warning("保存配置失败: 请求数据为空")
@@ -180,6 +181,7 @@ def save_specific_config(config_name: str):
 
         # 获取请求体中的JSON数据
         config_data = request.json
+        current_app.logger.info(f"接收到配置数据: {config_data}")
 
         if not config_data:
             current_app.logger.warning(f"保存配置节 {config_name} 失败: 请求数据为空")

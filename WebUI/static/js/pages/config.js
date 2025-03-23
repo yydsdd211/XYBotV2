@@ -104,8 +104,21 @@ async function loadConfigs(schemas) {
 function renderConfigForm(schemas, configs) {
     const configSections = document.getElementById('configSections');
     configSections.innerHTML = '';
+    
+    // 获取配置节顺序
+    const sectionsOrder = schemas._meta && schemas._meta.sectionsOrder 
+        ? schemas._meta.sectionsOrder 
+        : Object.keys(schemas).filter(name => name !== '_meta');
+    
+    console.log('按原始顺序渲染配置节:', sectionsOrder);
+    
+    // 删除元数据，防止渲染成配置节
+    delete schemas._meta;
 
-    for (const configName in schemas) {
+    // 按原始顺序遍历配置节
+    for (const configName of sectionsOrder) {
+        if (!schemas[configName]) continue;
+        
         const schema = schemas[configName];
         const config = configs[configName] || {};
 
@@ -137,7 +150,14 @@ function renderSchemaProperties(schema, config, configName, parentPath = '') {
     let html = '';
 
     if (schema.properties) {
-        for (const propName in schema.properties) {
+        // 获取属性按照配置文件中的原始顺序
+        const propertyOrder = schema.propertyOrder || Object.keys(schema.properties);
+        
+        // 按原始顺序遍历属性
+        for (const propName of propertyOrder) {
+            // 跳过不存在的属性
+            if (!schema.properties[propName]) continue;
+            
             const propSchema = schema.properties[propName];
             const propValue = config[propName];
             const propPath = parentPath ? `${parentPath}.${propName}` : propName;
@@ -267,10 +287,18 @@ function renderArrayField(fieldId, schema, value, configName, propPath) {
             <div class="array-items">
     `;
 
-    if (value && value.length > 0) {
-        value.forEach((item, index) => {
+    // 确保value是有效的数组
+    const arrayValue = Array.isArray(value) ? value : [];
+    
+    console.log(`渲染数组字段 ${propPath}，值:`, arrayValue);
+
+    if (arrayValue.length > 0) {
+        arrayValue.forEach((item, index) => {
             html += renderArrayItem(fieldId, schema, item, index, configName, propPath);
         });
+    } else {
+        // 如果数组为空，添加一个空元素让用户有起点
+        html += renderArrayItem(fieldId, schema, "", 0, configName, propPath);
     }
 
     html += `
@@ -297,12 +325,16 @@ function renderArrayItem(fieldId, schema, value, index, configName, propPath) {
     `;
 
     if (schema.items.type === 'string') {
+        // 确保value是字符串，避免undefined或null
+        const itemValue = value !== null && value !== undefined ? String(value) : '';
         html += `
-            <input type="text" class="form-control" id="${itemId}" name="${itemName}" value="${value || ''}">
+            <input type="text" class="form-control" id="${itemId}" name="${itemName}" value="${itemValue}">
         `;
     } else if (schema.items.type === 'number' || schema.items.type === 'integer') {
+        // 确保value是数字，避免undefined或null
+        const itemValue = value !== null && value !== undefined ? Number(value) : '';
         html += `
-            <input type="number" class="form-control" id="${itemId}" name="${itemName}" value="${value || 0}">
+            <input type="number" class="form-control" id="${itemId}" name="${itemName}" value="${itemValue}">
         `;
     } else if (schema.items.type === 'object') {
         html += `
@@ -478,56 +510,91 @@ function validateForm() {
 // 收集配置数据
 function collectConfigData(configName) {
     const config = {};
-
-    document.querySelectorAll(`[name^="${configName}["]`).forEach(input => {
-        const name = input.getAttribute('name');
-        const path = name.match(/\[(.*?)\]/)[1];
-        const value = getInputValue(input);
-
+    const sectionElement = document.querySelector(`.config-section[data-config="${configName}"]`);
+    
+    // 处理基本输入字段
+    sectionElement.querySelectorAll('input[type="text"], input[type="number"], input[type="password"], select, textarea').forEach(input => {
+        if (!input.name || !input.name.startsWith(`${configName}[`)) return;
+        
+        const path = input.name.match(/\[(.*?)\]/)[1];
+        let value = input.value;
+        
+        // 处理数字类型
+        if (input.type === 'number') {
+            value = value ? Number(value) : null;
+        }
+        
         setNestedProperty(config, path, value);
     });
-
+    
+    // 处理复选框
+    sectionElement.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        if (!input.name || !input.name.startsWith(`${configName}[`)) return;
+        
+        const path = input.name.match(/\[(.*?)\]/)[1];
+        const value = input.checked;
+        
+        setNestedProperty(config, path, value);
+    });
+    
+    // 处理数组类型
+    sectionElement.querySelectorAll('.array-container').forEach(container => {
+        const fieldId = container.id.replace('-container', '');
+        const fieldMatch = fieldId.match(new RegExp(`${configName}-(.+)`));
+        if (!fieldMatch) return;
+        
+        const path = fieldMatch[1].replace(/-/g, '.');
+        const arrayItems = [];
+        
+        // 收集数组中的所有项
+        container.querySelectorAll('.array-item').forEach(item => {
+            const input = item.querySelector('input, select, textarea');
+            if (input) {
+                let value = input.value;
+                if (input.type === 'number') {
+                    value = value ? Number(value) : null;
+                }
+                arrayItems.push(value);
+            }
+        });
+        
+        // 设置数组值
+        setNestedProperty(config, path, arrayItems);
+    });
+    
+    console.log(`收集的配置数据 ${configName}:`, config);
     return config;
-}
-
-// 获取输入值
-function getInputValue(input) {
-    const type = input.getAttribute('type');
-
-    if (type === 'checkbox') {
-        return input.checked;
-    } else if (type === 'number') {
-        return input.value ? Number(input.value) : null;
-    } else {
-        return input.value;
-    }
 }
 
 // 设置嵌套属性
 function setNestedProperty(obj, path, value) {
-    const parts = path.split(/\.|\[|\]/).filter(Boolean);
+    // 如果路径中包含连字符，直接设置为字段名，不再拆分为嵌套路径
+    if (path.includes('-')) {
+        obj[path] = value;
+        return;
+    }
+    
+    const parts = path.split('.');
     let current = obj;
-
+    
     for (let i = 0; i < parts.length - 1; i++) {
         const part = parts[i];
-
-        if (!isNaN(part)) {
-            if (!Array.isArray(current)) {
-                current = [];
-            }
-        } else if (current[part] === undefined) {
-            current[part] = {};
+        if (current[part] === undefined) {
+            // 检查下一部分是否是数字，决定创建对象还是数组
+            const nextPart = parts[i + 1];
+            current[part] = !isNaN(parseInt(nextPart)) ? [] : {};
         }
-
         current = current[part];
     }
-
+    
     const lastPart = parts[parts.length - 1];
     current[lastPart] = value;
 }
 
 // 保存单个配置
 async function saveConfig(configName, configData) {
+    console.log(`发送配置数据 ${configName}:`, JSON.stringify(configData, null, 2));
+    
     try {
         const response = await fetch(`/config/api/config/${configName}`, {
             method: 'POST',
@@ -538,9 +605,15 @@ async function saveConfig(configName, configData) {
         });
 
         const data = await response.json();
-        return data.code === 0;
+        if (data.code !== 0) {
+            console.error(`保存配置 ${configName} 失败:`, data.msg);
+            showNotification(`保存配置 ${configName} 失败: ${data.msg}`, 'error');
+            return false;
+        }
+        return true;
     } catch (error) {
         console.error(`保存配置 ${configName} 失败:`, error);
+        showNotification(`保存配置 ${configName} 失败: ${error.message}`, 'error');
         return false;
     }
 } 
