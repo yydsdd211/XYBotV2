@@ -98,40 +98,14 @@
 {% if messages %}
 <script>
     // 页面加载完成后显示通知
-    document.addEventListener('DOMContentLoaded', function () {
-        {%
-            for category, message in messages %
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for category, message in messages %}
         if (window.NotificationManager) {
-            NotificationManager.show({
-            {
-                message | tojson
-            }
-        },
-            {
-                {
-                    category | tojson
-                }
-            }
-        )
-            ;
+            NotificationManager.show({{ message|tojson }}, {{ category|tojson }});
         } else {
-            showNotification({
-            {
-                message | tojson
-            }
-        },
-            {
-                {
-                    category | tojson
-                }
-            }
-        )
-            ;
+            showNotification({{ message|tojson }}, {{ category|tojson }});
         }
-        {%
-            endfor %
-        }
+        {% endfor %}
     });
 </script>
 {% endif %}
