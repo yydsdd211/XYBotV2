@@ -56,6 +56,14 @@ docker-compose restart xybotv2
 
 > 如果是修改插件配置则可使用热加载、热卸载、热重载指令，不用重启机器人。
 
+6. 🔄 访问Web界面
+
+应用现在使用gunicorn和eventlet运行，Web界面可通过以下地址访问：
+
+```
+http://服务器IP地址:9999
+```
+
 ## ❓ 常见问题
 
 1. 🔌 Redis 连接失败
@@ -88,3 +96,8 @@ docker-compose logs --tail=100 xybotv2
 5. `正在运行`相关的报错
 
 - 将占用9000端口的进程强制结束
+
+6. 🌐 无法访问Web界面
+
+- 确保9999端口已在防火墙中开放
+- 检查docker-compose.yml中的端口映射配置
