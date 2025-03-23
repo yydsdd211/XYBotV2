@@ -32,4 +32,3 @@ python-dotenv==1.0.1
 tomli==2.0.1
 tomlkit==0.13.2
 eventlet==0.39.1
-gevent==24.11.1

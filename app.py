@@ -99,7 +99,7 @@ if __name__ == '__main__':
     # Run web server
     try:
         host = os.environ.get('FLASK_HOST', '0.0.0.0')
-        port = int(os.environ.get('FLASK_PORT', 5000))
+        port = int(os.environ.get('FLASK_PORT', 9999))
         # Always disable debug mode to prevent double initialization
         debug = False
         socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
