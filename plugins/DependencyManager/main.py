@@ -4,19 +4,19 @@
 作者: 老夏的金库
 版本: 1.0.0
 """
-import os
-import sys
-import subprocess
-import tomllib
 import importlib
+import io
+import os
 import re
 import shutil
-from pathlib import Path
+import subprocess
+import sys
 import tempfile
-from loguru import logger
-import requests
+import tomllib
 import zipfile
-import io
+
+import requests
+from loguru import logger
 
 from WechatAPI import WechatAPIClient
 from utils.decorators import *
@@ -27,14 +27,14 @@ class DependencyManager(PluginBase):
     """依赖包管理插件，允许管理员通过微信发送命令来安装/更新/查询Python依赖包和Github插件"""
     
     description = "依赖包管理插件"
-    author = "老夏的金库"
-    version = "1.0.0"
+    author = "老夏的金库 HenryXiaoYang"
+    version = "1.1.0"
     
     def __init__(self):
         super().__init__()
         
         # 记录插件开始初始化
-        logger.critical("[DependencyManager] 开始加载插件")
+        logger.info("[DependencyManager] 开始加载插件")
         
         # 获取配置文件路径
         self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,21 +42,27 @@ class DependencyManager(PluginBase):
         
         # 获取主项目根目录 - 使用相对路径 - _data/plugins
         self.root_dir = os.path.dirname(self.plugin_dir)  # 指向_data/plugins目录
-        logger.critical(f"[DependencyManager] 根目录设置为: {self.root_dir}")
+        logger.info(f"[DependencyManager] 根目录设置为: {self.root_dir}")
             
         # 插件目录就是根目录本身
         self.plugins_dir = self.root_dir
-        logger.critical(f"[DependencyManager] 插件目录设置为: {self.plugins_dir}")
+        logger.info(f"[DependencyManager] 插件目录设置为: {self.plugins_dir}")
         
         # 加载配置
         self.load_config()
         
-        logger.critical(f"[DependencyManager] 插件初始化完成, 启用状态: {self.enable}, 优先级: 80")
+        logger.info(f"[DependencyManager] 插件初始化完成, 启用状态: {self.enable}, 优先级: 80")
         
     def load_config(self):
         """加载配置文件"""
         try:
-            logger.critical(f"[DependencyManager] 尝试从 {self.config_path} 加载配置")
+            with open("main_config.toml", "rb") as f:
+                config = tomllib.load(f)
+
+            self.admin_list = config.get("XYBot", {}).get("admin_list", [])
+
+
+            # logger.info(f"[DependencyManager] 尝试从 {self.config_path} 加载配置")
             
             with open(self.config_path, "rb") as f:
                 config = tomllib.load(f)
@@ -64,7 +70,6 @@ class DependencyManager(PluginBase):
             # 读取基本配置
             basic_config = config.get("basic", {})
             self.enable = basic_config.get("enable", False)
-            self.admin_list = basic_config.get("admin_list", [])
             self.allowed_packages = basic_config.get("allowed_packages", [])
             self.check_allowed = basic_config.get("check_allowed", False)
             
@@ -78,10 +83,10 @@ class DependencyManager(PluginBase):
             # 读取插件安装配置 - 使用唤醒词
             self.github_install_prefix = cmd_config.get("github_install", "github")
             
-            logger.critical(f"[DependencyManager] 配置加载成功")
-            logger.critical(f"[DependencyManager] 启用状态: {self.enable}")
-            logger.critical(f"[DependencyManager] 管理员列表: {self.admin_list}")
-            logger.critical(f"[DependencyManager] GitHub前缀: '{self.github_install_prefix}'")
+            logger.info(f"[DependencyManager] 配置加载成功")
+            logger.info(f"[DependencyManager] 启用状态: {self.enable}")
+            logger.info(f"[DependencyManager] 管理员列表: {self.admin_list}")
+            logger.info(f"[DependencyManager] GitHub前缀: '{self.github_install_prefix}'")
             
         except Exception as e:
             logger.error(f"[DependencyManager] 加载配置失败: {str(e)}")
@@ -99,7 +104,7 @@ class DependencyManager(PluginBase):
     async def handle_text_message(self, bot: WechatAPIClient, message: dict):
         """处理文本消息，检查是否为依赖管理命令"""
         # 在最开始就记录收到消息，即使未启用也记录，便于调试
-        logger.critical(f"[DependencyManager] 收到消息调用: {message.get('Content', '')}")
+        logger.info(f"[DependencyManager] 收到消息调用: {message.get('Content', '')}")
         
         if not self.enable:
             logger.debug("[DependencyManager] 插件未启用，跳过处理")
@@ -126,11 +131,11 @@ class DependencyManager(PluginBase):
             
         # 检查是否为管理员
         if sender_id not in self.admin_list:
-            logger.critical(f"[DependencyManager] 用户 {sender_id} 不在管理员列表中")
-            logger.critical(f"[DependencyManager] 当前管理员列表: {self.admin_list}")
+            logger.info(f"[DependencyManager] 用户 {sender_id} 不在管理员列表中")
+            logger.info(f"[DependencyManager] 当前管理员列表: {self.admin_list}")
             return True  # 非管理员，允许其他插件处理
         
-        logger.critical(f"[DependencyManager] 管理员 {sender_id} 发送命令: {content}")
+        logger.info(f"[DependencyManager] 管理员 {sender_id} 发送命令: {content}")
         
         # ====================== 命令处理部分 ======================
         # 按照优先级排序，先处理特殊命令，再处理标准命令模式
@@ -145,7 +150,7 @@ class DependencyManager(PluginBase):
         
         # 2.1 检查是否明确以GitHub前缀开头 - 要求明确的安装意图
         starts_with_prefix = content.lower().startswith(self.github_install_prefix.lower())
-        logger.critical(f"[DependencyManager] 检查是否以'{self.github_install_prefix}'开头: {starts_with_prefix}, 内容: '{content}'")
+        logger.info(f"[DependencyManager] 检查是否以'{self.github_install_prefix}'开头: {starts_with_prefix}, 内容: '{content}'")
         
         # 2.2 GitHub快捷命令 - GeminiImage特殊处理
         if starts_with_prefix and (content.strip().lower() == f"{self.github_install_prefix} gemini" or 
@@ -182,10 +187,10 @@ class DependencyManager(PluginBase):
             
         # 2.4 标准GitHub安装命令处理 - 必须以明确的前缀开头
         if starts_with_prefix:
-            logger.critical(f"[DependencyManager] 检测到GitHub安装命令: {content}")
+            logger.info(f"[DependencyManager] 检测到GitHub安装命令: {content}")
             # 获取前缀后面的内容
             command_content = content[len(self.github_install_prefix):].strip()
-            logger.critical(f"[DependencyManager] 提取的命令内容: '{command_content}'")
+            logger.info(f"[DependencyManager] 提取的命令内容: '{command_content}'")
             
             # 处理快捷命令 - gemini
             if command_content.lower() == "gemini" or command_content.lower() == "geminiimage":
@@ -312,7 +317,7 @@ class DependencyManager(PluginBase):
     
     async def _handle_github_install(self, bot: WechatAPIClient, chat_id: str, github_url: str):
         """处理从Github安装插件的命令"""
-        logger.critical(f"[DependencyManager] 开始处理GitHub插件安装，URL: {github_url}")
+        logger.info(f"[DependencyManager] 开始处理GitHub插件安装，URL: {github_url}")
         
         # 处理各种GitHub URL格式
         if not github_url:
@@ -334,7 +339,7 @@ class DependencyManager(PluginBase):
                 else:
                     github_url = "https://github.com/" + github_url.strip()
         
-        logger.critical(f"[DependencyManager] 标准化后的URL: {github_url}")
+        logger.info(f"[DependencyManager] 标准化后的URL: {github_url}")
         
         # 验证URL格式
         if not github_url.startswith("https://github.com"):
@@ -359,8 +364,8 @@ class DependencyManager(PluginBase):
         
         # 使用相对路径，直接在plugins_dir下创建插件目录
         plugin_target_dir = os.path.join(self.plugins_dir, plugin_name)
-        logger.critical(f"[DependencyManager] 提取到用户名: {user_name}, 仓库名: {repo_name}")
-        logger.critical(f"[DependencyManager] 目标目录: {plugin_target_dir}")
+        logger.info(f"[DependencyManager] 提取到用户名: {user_name}, 仓库名: {repo_name}")
+        logger.info(f"[DependencyManager] 目标目录: {plugin_target_dir}")
         
         # 检查插件目录是否已存在
         if os.path.exists(plugin_target_dir):
@@ -479,7 +484,7 @@ class DependencyManager(PluginBase):
         try:
             # 构建ZIP下载链接
             zip_url = f"https://github.com/{user_name}/{repo_name}/archive/refs/heads/main.zip"
-            logger.critical(f"[DependencyManager] 开始下载ZIP: {zip_url}")
+            logger.info(f"[DependencyManager] 开始下载ZIP: {zip_url}")
             
             # 发送下载状态
             await bot.send_text_message(chat_id, f"📥 正在从GitHub下载ZIP文件: {zip_url}")
@@ -489,7 +494,7 @@ class DependencyManager(PluginBase):
             if response.status_code != 200:
                 # 尝试使用master分支
                 zip_url = f"https://github.com/{user_name}/{repo_name}/archive/refs/heads/master.zip"
-                logger.critical(f"[DependencyManager] 尝试下载master分支: {zip_url}")
+                logger.info(f"[DependencyManager] 尝试下载master分支: {zip_url}")
                 response = requests.get(zip_url, timeout=30)
                 
             if response.status_code != 200:
@@ -498,14 +503,14 @@ class DependencyManager(PluginBase):
                 return False
                 
             # 解压ZIP文件
-            logger.critical(f"[DependencyManager] 下载完成，文件大小: {len(response.content)} 字节")
-            logger.critical(f"[DependencyManager] 解压ZIP文件到: {target_dir}")
+            logger.info(f"[DependencyManager] 下载完成，文件大小: {len(response.content)} 字节")
+            logger.info(f"[DependencyManager] 解压ZIP文件到: {target_dir}")
             
             z = zipfile.ZipFile(io.BytesIO(response.content))
             
             # 检查ZIP文件内容
             zip_contents = z.namelist()
-            logger.critical(f"[DependencyManager] ZIP文件内容: {', '.join(zip_contents[:5])}...")
+            logger.info(f"[DependencyManager] ZIP文件内容: {', '.join(zip_contents[:5])}...")
             
             if is_update:
                 # 更新时先备份配置文件
