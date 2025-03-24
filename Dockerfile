@@ -29,7 +29,6 @@ COPY . .
 
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\
-# 启动Redis服务\n\
 redis-server /etc/redis/redis.conf --daemonize yes\n\
 python app.py' > /app/start.sh \
     && chmod +x /app/start.sh
