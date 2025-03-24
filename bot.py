@@ -144,18 +144,18 @@ async def run_bot():
                 json.dump(robot_stat, f)
 
             # 获取登录账号信息
-            bot.wxid = data.get("acctSectResp").get("userName")
-            bot.nickname = data.get("acctSectResp").get("nickName")
-            bot.alias = data.get("acctSectResp").get("alias")
-            bot.phone = data.get("acctSectResp").get("bindMobile")
+            bot.wxid = data.get("acctSectResp", {}).get("userName", "")
+            bot.nickname = data.get("acctSectResp", {}).get("nickName", "")
+            bot.alias = data.get("acctSectResp", {}).get("alias", "")
+            bot.phone = data.get("acctSectResp", {}).get("bindMobile", "")
 
             logger.info("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
                         bot.phone)
 
-            bot_bridge.save_profile(avatar_url=data.get("userInfoExt").get("BigHeadImgUrl"),
-                                    nickname=data.get("acctSectResp").get("nickName"),
-                                    wxid=data.get("acctSectResp").get("userName"),
-                                    alias=data.get("acctSectResp").get("alias"))
+            bot_bridge.save_profile(avatar_url=data.get("userInfoExt", {}).get("BigHeadImgUrl", ""),
+                                    nickname=data.get("acctSectResp", {}).get("nickName", ""),
+                                    wxid=data.get("acctSectResp", {}).get("userName", ""),
+                                    alias=data.get("acctSectResp", {}).get("alias", ""))
 
 
         else:  # 已登录
