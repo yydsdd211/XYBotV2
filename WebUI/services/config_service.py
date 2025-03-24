@@ -70,8 +70,6 @@ class ConfigService(metaclass=Singleton):
             "WebUI.session-timeout": lambda v: isinstance(v, int) and v > 0
         }
 
-        logger.log('WEBUI', "配置服务初始化完成")
-
     def get_config(self) -> Dict[str, Any]:
         """获取完整配置
         
@@ -147,9 +145,10 @@ class ConfigService(metaclass=Singleton):
                 if section_match:
                     current_section = section_match.group(1)
                     continue
-                
+
                 # 记录独立的注释行（不紧随在键值对后面的注释）
-                if line.startswith('#') and (i == 0 or not lines[i-1].strip() or lines[i-1].strip().startswith('#')):
+                if line.startswith('#') and (
+                        i == 0 or not lines[i - 1].strip() or lines[i - 1].strip().startswith('#')):
                     standalone_comment_lines.append(i)
                     continue
 
@@ -168,8 +167,8 @@ class ConfigService(metaclass=Singleton):
                     key = kv_match.group(1).strip()
                     # 寻找前一行是否是该字段的注释（且不是独立注释行）
                     idx = i - 1
-                    if (idx >= 0 and idx not in standalone_comment_lines and 
-                        lines[idx].strip().startswith('#')):
+                    if (idx >= 0 and idx not in standalone_comment_lines and
+                            lines[idx].strip().startswith('#')):
                         comment = lines[idx].strip()[1:].strip()
                         field_path = f"{current_section}.{key}"
                         comments[field_path] = comment
@@ -194,10 +193,10 @@ class ConfigService(metaclass=Singleton):
         try:
             # 打印接收到的配置数据，用于调试
             logger.log('WEBUI', f"接收到配置数据: {config}")
-            
+
             # 修复已损坏的配置结构 - 处理嵌套结构变成的特殊情况
             self._fix_nested_config_structure(config)
-            
+
             # 如果配置文件已存在，先读取它以保留注释和格式
             doc = tomlkit.document()
             if self.config_path.exists():
@@ -220,10 +219,10 @@ class ConfigService(metaclass=Singleton):
                     if isinstance(value, list):
                         # 记录调试信息
                         logger.log('WEBUI', f"处理列表字段 {section_name}.{key}，原始值: {value}")
-                        
+
                         # 创建一个新的tomlkit数组对象
                         toml_array = tomlkit.array()
-                        
+
                         # 遍历列表中每个元素，添加到tomlkit数组
                         for item in value:
                             # 确保不会添加None
@@ -235,7 +234,7 @@ class ConfigService(metaclass=Singleton):
                                         continue
                                 toml_array.append(item)
                                 logger.log('WEBUI', f"  - 添加元素: {item} (类型: {type(item).__name__})")
-                                
+
                         # 设置数组值
                         doc[section_name][key] = toml_array
                         logger.log('WEBUI', f"完成列表字段 {section_name}.{key} 保存: {toml_array}")
@@ -277,43 +276,45 @@ class ConfigService(metaclass=Singleton):
                     if 'plugins' in config['XYBot']['disabled']:
                         # 将 XYBot.disabled.plugins 的值转移到 XYBot.disabled-plugins
                         plugins_value = config['XYBot']['disabled']['plugins']
-                        logger.log('WEBUI', f"修复嵌套结构: 将 XYBot.disabled.plugins 值 {plugins_value} 转移到 XYBot.disabled-plugins")
+                        logger.log('WEBUI',
+                                   f"修复嵌套结构: 将 XYBot.disabled.plugins 值 {plugins_value} 转移到 XYBot.disabled-plugins")
                         config['XYBot']['disabled-plugins'] = plugins_value
-                        
+
                         # 删除嵌套结构
                         del config['XYBot']['disabled']
-                
+
                 # 情况2: disabled-plugins 字段存在，但不是数组类型
                 if 'disabled-plugins' in config['XYBot'] and not isinstance(config['XYBot']['disabled-plugins'], list):
                     # 尝试将字符串转换为数组
                     plugin_value = config['XYBot']['disabled-plugins']
                     logger.log('WEBUI', f"修复 disabled-plugins 类型: 从 {type(plugin_value).__name__} 转换为数组")
-                    
+
                     if isinstance(plugin_value, str):
                         # 如果是空字符串，转换为空数组
                         if not plugin_value.strip():
                             config['XYBot']['disabled-plugins'] = []
                         # 如果是逗号分隔的字符串，拆分成数组
                         elif ',' in plugin_value:
-                            config['XYBot']['disabled-plugins'] = [item.strip() for item in plugin_value.split(',') if item.strip()]
+                            config['XYBot']['disabled-plugins'] = [item.strip() for item in plugin_value.split(',') if
+                                                                   item.strip()]
                         # 否则作为单个元素的数组
                         else:
                             config['XYBot']['disabled-plugins'] = [plugin_value.strip()]
-            
+
             # 清理可能的 undefined 字段
             for section_name in list(config.keys()):
                 if section_name == 'undefined':
                     logger.log('WEBUI', f"删除无效配置节: {section_name}")
                     del config[section_name]
                     continue
-                    
+
                 section_data = config[section_name]
                 if isinstance(section_data, dict):
                     for key in list(section_data.keys()):
                         if key == 'undefined':
                             logger.log('WEBUI', f"删除无效字段: {section_name}.{key}")
                             del section_data[key]
-            
+
             logger.log('WEBUI', "配置结构修复完成")
         except Exception as e:
             logger.log('WEBUI', f"修复配置结构时出错: {str(e)}")
@@ -329,25 +330,25 @@ class ConfigService(metaclass=Singleton):
         """
         # 获取当前配置
         config = self.get_config()
-        
+
         # 从文件中读取原始配置顺序
         sections_order = []
         fields_order = {}
-        
+
         try:
             if self.config_path.exists():
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                
+
                 # 按行解析配置文件，提取节和字段的顺序
                 lines = content.split('\n')
                 current_section = None
-                
+
                 for line in lines:
                     line = line.strip()
                     if not line or line.startswith('#'):
                         continue
-                    
+
                     # 检查是否是节定义行
                     section_match = re.match(r'^\[([^\]]+)\]', line)
                     if section_match:
@@ -356,14 +357,14 @@ class ConfigService(metaclass=Singleton):
                             sections_order.append(current_section)
                             fields_order[current_section] = []
                         continue
-                    
+
                     # 检查是否是键值对
                     kv_match = re.match(r'^([^=]+)=', line)
                     if kv_match and current_section:
                         field_name = kv_match.group(1).strip()
                         if field_name not in fields_order[current_section]:
                             fields_order[current_section].append(field_name)
-                
+
                 logger.log('WEBUI', f"提取到配置节顺序: {sections_order}")
                 for section, fields in fields_order.items():
                     logger.log('WEBUI', f"配置节 {section} 的字段顺序: {fields}")
@@ -386,14 +387,14 @@ class ConfigService(metaclass=Singleton):
         for section_name in sections_order:
             if section_name not in config:
                 continue
-                
+
             section_data = config[section_name]
-            
+
             # 跳过无效的配置节
             if section_name in ignored_fields:
                 logger.log('WEBUI', f"跳过无效配置节: {section_name}")
                 continue
-                
+
             # 创建该配置节的schema
             section_schema = {
                 "title": section_name,
@@ -406,13 +407,13 @@ class ConfigService(metaclass=Singleton):
             for field_name in fields_order.get(section_name, []):
                 if field_name not in section_data:
                     continue
-                    
+
                 # 跳过无效字段
                 if field_name in ignored_fields:
                     logger.log('WEBUI', f"跳过无效字段: {section_name}.{field_name}")
                     continue
-                
-                field_value = section_data[field_name]    
+
+                field_value = section_data[field_name]
                 field_path = f"{section_name}.{field_name}"
                 field_type = self._get_field_type(field_value)
 

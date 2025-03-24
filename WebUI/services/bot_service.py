@@ -51,7 +51,6 @@ class BotService(metaclass=Singleton):
         self._start_time: float = 0
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._bot_thread: Optional[threading.Thread] = None
-        logger.log('WEBUI', "机器人服务初始化完成")
 
     def start_bot(self) -> bool:
         """启动机器人
@@ -143,7 +142,7 @@ class BotService(metaclass=Singleton):
             # 重置状态
             self._task = None
             self._start_time = 0
-            self._bot_thread = None 
+            self._bot_thread = None
             self._loop = None
             bot_bridge.start_time = 0
             bot_bridge.is_running = False

@@ -30,7 +30,7 @@ def get_event_loop():
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-    
+
     return loop
 
 
@@ -41,7 +41,6 @@ class PluginService(metaclass=Singleton):
         """初始化插件服务"""
         # 配置目录
         self.config_dir = ROOT_DIR / 'plugins'
-        logger.log('WEBUI', "插件服务初始化完成")
 
     def get_all_plugins(self) -> List[Dict[str, Any]]:
         """获取所有插件列表"""
@@ -62,7 +61,7 @@ class PluginService(metaclass=Singleton):
     async def reload_plugin(self, plugin_name: str) -> bool:
         """重新加载插件"""
         return await bot_bridge.reload_plugin(plugin_name)
-    
+
     def run_async(self, coro):
         """
         安全地执行异步协程
@@ -74,7 +73,7 @@ class PluginService(metaclass=Singleton):
             协程执行结果
         """
         loop = get_event_loop()
-        
+
         if loop.is_running():
             # 如果循环正在运行，使用run_coroutine_threadsafe
             future = asyncio.run_coroutine_threadsafe(coro, loop)
@@ -82,7 +81,7 @@ class PluginService(metaclass=Singleton):
         else:
             # 否则直接运行
             return loop.run_until_complete(coro)
-    
+
     def save_plugin_config(self, plugin_name: str, config_data: Dict[str, Any]) -> bool:
         """
         保存插件配置

@@ -14,13 +14,14 @@ except (FileNotFoundError, tomllib.TOMLDecodeError):
     WEBUI_CONFIG = {}
 
 # Flask应用配置
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_key_please_change_in_production')
-# DEBUG = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
-DEBUG = True
+SECRET_KEY = WEBUI_CONFIG.get("flask-secret-key") or os.environ.get('SECRET_KEY', 'HenryXiaoYang_XYBotV2')
+DEBUG = WEBUI_CONFIG.get("debug", False)
 
 # 会话配置
 SESSION_TYPE = 'filesystem'
 SESSION_PERMANENT = True
+SESSION_USE_SIGNER = True
+SESSION_FILE_DIR = 'flask_session'
 PERMANENT_SESSION_LIFETIME = int(WEBUI_CONFIG.get('session-timeout', 30)) * 60  # 转换为秒
 
 # 认证相关配置

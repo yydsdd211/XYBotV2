@@ -38,7 +38,6 @@ class FileService(metaclass=Singleton):
         """
         # 确保日志目录存在
         LOGS_DIR.mkdir(parents=True, exist_ok=True)
-        logger.log('WEBUI', f"文件服务初始化完成，根目录: {ROOT_DIR}")
 
     def _validate_path(self, rel_path: str) -> Path:
         """验证并返回安全的文件路径

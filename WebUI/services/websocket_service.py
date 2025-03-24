@@ -51,7 +51,6 @@ class LogWatcher:
         self.running = True
         self.watch_thread = threading.Thread(target=self._watch_log_file, daemon=True)
         self.watch_thread.start()
-        logger.info("日志WebSocket监控已启动")
 
     def stop(self):
         """停止日志监控线程"""
@@ -195,7 +194,6 @@ def init_websocket():
 
     # 确保只初始化一次
     if log_watcher is None:
-        logger.info("初始化WebSocket日志监控服务...")
         log_watcher = LogWatcher(socketio)
         log_watcher.start()
 
