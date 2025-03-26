@@ -162,17 +162,16 @@ async def run_bot():
             bot.wxid = wxid
             profile = await bot.get_profile()
 
-            bot.nickname = profile.get("NickName").get("string")
-            bot.alias = profile.get("Alias")
-            bot.phone = profile.get("BindMobile").get("string")
+            bot.nickname = profile.get("NickName", {}).get("string", "")
+            bot.alias = profile.get("Alias", "")
+            bot.phone = profile.get("BindMobile", {}).get("string", "")
 
             logger.info("登录账号信息: wxid: {}  昵称: {}  微信号: {}  手机号: {}", bot.wxid, bot.nickname, bot.alias,
                         bot.phone)
 
-            bot_bridge.save_profile(
-                                    nickname=profile.get("NickName").get("string"),
+            bot_bridge.save_profile(nickname=profile.get("NickName", {}).get("string", ""),
                                     wxid=wxid,
-                                    alias=profile.get("Alias"))
+                                    alias=profile.get("Alias", ""))
 
         logger.info("登录设备信息: device_name: {}  device_id: {}", device_name, device_id)
 
